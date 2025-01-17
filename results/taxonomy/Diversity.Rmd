@@ -1,0 +1,1136 @@
+---
+title: 'Diversity of *Scaptotrigona Mexicana* and *Melipona beecheii*'
+subtitle: 'Reads'
+author:
+ - Adriana Haydé Contreras Peruyero (haydeeperuyero@gmail.com)
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+```{r, echo=FALSE}
+library("phyloseq")
+library("ggplot2")
+library("RColorBrewer")
+library("patchwork")
+library(readr)
+library(tidyverse)
+library(grid)
+library(gridExtra)
+```
+
+First, we need to read the biom files. In this file, we found the following **Kingdoms**.
+
+```{r, echo=FALSE}
+raw_metagenomes <- import_biom("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/bioms/db_levaduras/honey.biom")
+raw_metagenomes@tax_table@.Data <- substring(raw_metagenomes@tax_table@.Data, 4)
+colnames(raw_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+
+#raw_scapto <- import_biom("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/bioms/db_levaduras/Scapto.biom")
+#raw_scapto@tax_table@.Data <- substring(raw_scapto@tax_table@.Data, 4)
+#colnames(raw_scapto@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+
+#raw_melli <- import_biom("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/bioms/db_levaduras/Melli.biom")
+#raw_melli@tax_table@.Data <- substring(raw_melli@tax_table@.Data, 4)
+#colnames(raw_melli@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+```
+
+
+```{r, include=FALSE, message=FALSE, warning=FALSE}
+df_meta <- read_csv("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/metadata_miel.csv")
+
+#names(df_meta)[names(df_meta) == "Zootechnic Mangement"] <- "Zootechnic_Mangement"
+#names(df_meta)[names(df_meta) == "Flowering type"] <- "Flowering_type"
+#names(df_meta)[names(df_meta) == "Localidad"] <- "Locality"
+```
+
+```{r, include=FALSE}
+df_meta <- df_meta %>%
+  mutate(SampleID = case_when(
+    grepl("_Scapto", ID) ~ paste0("Scapto_", sub("_Scapto.*", "", ID)),
+    grepl("_Melli", ID) ~ paste0("Meli_", sub("_Melli.*", "", ID)),
+    TRUE ~ as.character(ID)  # Para cualquier otro caso, mantener el valor original
+  ))
+```
+
+
+```{r, eval=FALSE}
+#df_meta_scapto <- df_meta %>%
+#  filter(Specie == "Scaptotrigona Mexicana")
+
+#df_meta_melli <- df_meta %>%
+#  filter(Specie == "Melipona beecheii")
+```
+
+
+```{r}
+df_metadata <- sample_data(df_meta)
+rownames(df_metadata) <- df_meta$ID
+
+#df_metadata_scapto <- sample_data(df_meta_scapto)
+#rownames(df_metadata_scapto) <- df_meta_scapto$ID
+
+#df_metadata_melli <- sample_data(df_meta_melli)
+#rownames(df_metadata_melli) <- df_meta_melli$ID
+```
+
+
+```{r, echo=FALSE}
+all_data <- merge_phyloseq(raw_metagenomes, sample_data(df_metadata))
+
+#all_data_scapto <- merge_phyloseq(raw_scapto, sample_data(df_metadata_scapto))
+
+#all_data_melli <- merge_phyloseq(raw_melli, sample_data(df_metadata_melli))
+```
+
+```{r, echo=FALSE}
+# Obtener los nombres de las muestras
+sample_names <- sample_names(all_data)
+
+
+# Cambiar nombres con "_Melli" a "M_número"
+sample_names <- gsub("(\\d+)_Melli", "Meli_\\1", sample_names)
+
+# Cambiar nombres con "_Scapto" a "S_número"
+sample_names <- gsub("(\\d+)_Scapto", "Scapto_\\1", sample_names)
+
+# Asignar los nuevos nombres de las muestras al objeto phyloseq
+sample_names(all_data) <- sample_names
+
+# Verificar los nuevos nombres de las muestras
+sample_names(all_data)
+
+
+# Obtener los nombres de las muestras
+#sample_names_scapto <- sample_names(all_data_scapto)
+
+# Cambiar nombres con "_Scapto" a "S_número"
+#new_sample_names_scapto <- gsub("(\\d+)_Scapto", "S_\\1", sample_names_scapto)
+
+# Asignar los nuevos nombres de las muestras al objeto phyloseq
+#sample_names(all_data_scapto) <- new_sample_names_scapto
+
+# Verificar los nuevos nombres de las muestras
+#sample_names(all_data_scapto)
+
+
+# Obtener los nombres de las muestras
+#sample_names_melli <- sample_names(all_data_melli)
+
+# Cambiar nombres con "_Melli" a "M_número"
+#new_sample_names_melli <- gsub("(\\d+)_Melli", "M_\\1", sample_names_melli)
+
+# Asignar los nuevos nombres de las muestras al objeto phyloseq
+#sample_names(all_data_melli) <- new_sample_names_melli
+
+# Verificar los nuevos nombres de las muestras
+#sample_names(all_data_melli)
+```
+
+```{r}
+tax_table <- as.data.frame(tax_table(all_data))
+reino_col <- "Kingdom"  # Ajusta el nombre de la columna si es diferente
+reino_counts <- table(tax_table[[reino_col]])
+total_observaciones <- sum(reino_counts)
+porcentajes <- (reino_counts / total_observaciones) * 100
+porcentajes
+
+```
+
+
+```{r, echo=FALSE}
+dprof <- data.frame(Samples = colnames(all_data@otu_table@.Data),
+                    Reads = sample_sums(all_data),
+                    Specie = all_data@sam_data@.Data[[15]])
+
+#dprof_scapto <- data.frame(Samples = colnames(all_data_scapto@otu_table@.Data),
+#                    Reads = sample_sums(all_data_scapto),
+#                   Bee = all_data_scapto@sam_data@.Data[[15]])
+
+#dprof_melli <- data.frame(Samples = colnames(all_data_melli@otu_table@.Data),
+#                    Reads = sample_sums(all_data_melli),
+#                    Bee = all_data_melli@sam_data@.Data[[15]])
+
+```
+
+
+
+## Deep reads
+
+In the following plot, we can see the deep of the reads for each sample in the honey of *Scaptotrigona mexicana* specie.
+
+```{r, fig.dim=(12,8)   echo=FALSE}
+reads <- ggplot(data = dprof, mapping = aes(x = Samples, y = Reads))+
+  geom_bar(stat = "identity", aes( fill = Specie)) +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  facet_wrap(~Specie, scales = "free") +
+  labs(title = "Deep")+
+  theme(axis.text.x = element_text(angle = 55, hjust = 1))+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14, face = "italic"), # Tamaño del texto de la leyenda
+    legend.position = "bottom"
+  )
+  
+reads
+```
+
+
+```{r, include=FALSE}
+#ggsave(filename = "~/miel/Metagenomics/figures/deep_Scapto.svg", plot = reads, width = 8, height = 5, dpi = 300)
+
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/deep_reads3.svg", plot = reads, width = 10, height = 8, dpi = 300)
+```
+
+First, we will work with the `Bacteria` subset and then with the `Viruses`.
+
+
+# Bacteria
+
+A summary of the Bacteria subset:
+
+
+```{r, echo=FALSE}
+# bacterias
+dataB <- subset_taxa(all_data, Kingdom == "Bacteria")
+sample_sums(dataB)
+summary(dataB@otu_table@.Data)
+
+#dataB_S <- subset_taxa(all_data_scapto, Kingdom == "Bacteria")
+#sample_sums(dataB_S)
+#summary(dataB_S@otu_table@.Data)
+
+#dataB_M <- subset_taxa(all_data_melli, Kingdom == "Bacteria")
+#sample_sums(dataB_M)
+#summary(dataB_M@otu_table@.Data)
+```
+
+
+## Alpha diversity 
+
+- **Observed:** The Observed index simply counts the number of unique species (or Operational Taxonomic Units, OTUs) in a sample. It is a basic measure of species richness.
+
+**Formula:**  
+\[ S_{\text{obs}} = \sum_{i=1}^S I(n_i > 0) \]  
+where \( S \) is the total number of species and \( I(n_i > 0) \) is an indicator function that is 1 if species \( i \) is observed (i.e., \( n_i > 0 \)) and 0 otherwise.
+
+- **Chao1:** The Chao1 index is an estimator of the true species richness in a sample, accounting for the number of rare species. It is particularly useful when dealing with undersampled communities.
+
+**Formula:**  
+\[ \text{Chao1} = S_{\text{obs}} + \frac{F_1(F_1 - 1)}{2(F_2 + 1)} \]  
+where \( F_1 \) is the number of singletons (species observed exactly once) and \( F_2 \) is the number of doubletons (species observed exactly twice).
+
+- **Shannon:** The Shannon index, also known as Shannon-Wiener or Shannon-Weaver index, measures the diversity in a community by considering both the richness and the evenness of species. It accounts for the abundance of each species.
+
+**Formula:**  
+\[ H' = -\sum_{i=1}^S p_i \ln(p_i) \]  
+where \( S \) is the total number of species and \( p_i \) is the proportion of individuals belonging to species \( i \).
+
+In the case of the samples of honey, we can observed the following with respect to the diversity of these indexes. 
+
+The Observed index counts the number of unique species in each sample. The plot shows that:
+- Sample `23S` has the lowest observed species richness.
+- Sample `92S` has the highest observed species richness.
+- There is variability in species richness among the samples, with some samples having significantly higher species richness compared to others.
+
+The Chao1 index estimates the true species richness, accounting for rare species. The plot indicates that:
+- Sample `23S` has the lowest estimated species richness.
+- Sample `92S` has the highest estimated species richness, similar to the Observed index.
+- The error bars represent the uncertainty in the Chao1 estimates, showing that some samples have a higher level of uncertainty.
+- The pattern of richness among samples is consistent with the Observed index, but Chao1 generally provides a higher estimate due to its correction for unseen species.
+
+The Shannon index measures both species richness and evenness. The plot shows that:
+- Sample `93S` has the lowest Shannon diversity, indicating either lower richness, lower evenness, or both.
+- Sample `23S` has the highest Shannon diversity, suggesting higher richness, evenness, or both.
+- The variability in Shannon diversity across samples is smaller compared to Observed and Chao1 indices, suggesting that evenness plays a significant role in these diversity measures.
+
+In general, we can see the following:
+
+- The samples exhibit different levels of species richness and diversity.
+- Samples `23S` and `92S` stand out, with `23S` having the lowest richness but highest evenness, and `92S` having the highest richness but moderate evenness.
+- Chao1 provides a more conservative estimate of species richness by accounting for rare species, which is reflected in the wider range and error bars.
+- The Shannon index suggests that species evenness varies across samples, impacting the overall diversity.
+
+
+```{r, echo=FALSE}
+alpha_plot_observed <- plot_richness(physeq = dataB, color= "Locality",
+                                title = "Alpha diversity",
+                                measures = c("Observed"))+
+  facet_grid(~Specie, scales = "free")+
+  scale_color_brewer(palette = "Dark2") +
+  theme(strip.text = element_text(face = "italic"))+
+  labs(x= "Samples")+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.position = "bottom"
+    )
+alpha_plot_observed
+```
+```{r, echo=FALSE}
+alpha_plot_shanon <- plot_richness(physeq = dataB, color= "Locality",
+                                title = "Alpha diversity",
+                                measures = c("Shannon"))+
+  facet_grid(~Specie, scales = "free")+
+  scale_color_brewer(palette = "Dark2") +
+  theme(strip.text = element_text(face = "italic"))+
+  labs(x= "Samples")+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.position = "bottom"
+    )
+alpha_plot_shanon
+```
+
+```{r, echo=FALSE}
+alpha_plot_sup <- plot_richness(physeq = dataB, color= "Locality",
+                                title = "Alpha diversity",
+                                measures = c("Observed", "Shannon"))+
+  #facet_grid(~Specie, scales = "free")+
+  #theme(strip.text = element_text(face = "italic"))+
+  scale_color_brewer(palette = "Dark2") +
+  labs(x= "Samples")+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14), # Tamaño del texto de la leyenda
+    legend.position = "bottom"
+  )
+alpha_plot_sup
+```
+
+```{r, eval=FALSE,echo=FALSE}
+
+## Ya no
+alpha_scapto <- plot_richness(physeq = dataB_S, 
+                                title = "Scaptotrigona mexicana",
+                                measures = c("Observed","Chao1","Shannon"))#+
+  #scale_color_manual(values = c("blue", "darkblue"))
+
+alpha_melli <- plot_richness(physeq = dataB_M, 
+                                title = "Melipona beecheii",
+                                measures = c("Observed","Chao1","Shannon"))
+  
+#alpha_div_plot <- plot_richness(physeq = dataB, 
+#                                title = "Alpha diversity indexes",
+#                                measures = c("Chao1"))
+
+# Personalizar el gráfico
+alpha_scapto <- alpha_scapto + 
+  labs(
+    x = "Samples"
+  ) +
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "italic"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14) # Tamaño del texto de la leyenda
+  )
+  #scale_color_manual(values = c("Observed" = "blue", "Chao1" = "darkblue", "Shannon" = "lightblue")) +
+  #scale_fill_manual(values = c("Observed" = "blue", "Chao1" = "darkblue", "Shannon" = "lightblue"))
+
+
+
+alpha_melli <- alpha_melli + 
+  labs(
+    x = "Samples"
+  ) +
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "italic"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_blank(), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14) # Tamaño del texto de la leyenda
+  )
+
+
+title <- textGrob("Alpha diversity indexes", gp = gpar(fontsize = 20, fontface = "bold"))
+
+# Colocar los gráficos juntos con un título general usando grid.arrange
+alpha_plot <- grid.arrange(
+  arrangeGrob(alpha_scapto, alpha_melli, ncol = 2),  # Colocar los gráficos en una fila
+  top = title  # Agregar el título general
+)
+
+
+#grid.arrange( ncol=2)
+```
+
+```{r, include=FALSE}
+#ggsave(filename = "~/miel/Metagenomics/figures/alpha_div_plot_Scapto.svg", plot = alpha_plot, width = 8, height = 5, dpi = 300)
+
+#ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/alpha_div_plot.png", plot = alpha_plot, width = 7, height = 5, dpi = 300)
+
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/alpha_div_plot_sup2.svg", plot = alpha_plot_sup, width = 7, height = 5, dpi = 300)
+```
+
+```{r, include=FALSE, echo=FALSE}
+summary(dataB@tax_table@.Data== "")
+raw_metagenomesB <- subset_taxa(dataB, Genus != "")
+summary(dataB@tax_table@.Data== "")
+
+# summary(dataB_S@tax_table@.Data== "")
+# raw_metagenomesB_S <- subset_taxa(dataB_S, Genus != "")
+# summary(dataB_S@tax_table@.Data== "")
+# 
+# summary(dataB_M@tax_table@.Data== "")
+# raw_metagenomesB_M <- subset_taxa(dataB_M, Genus != "")
+# summary(dataB_M@tax_table@.Data== "")
+```
+
+
+## Beta diversity
+
+
+Beta diversity measures the differences in species composition between samples. The following plot is an NMDS (Non-metric Multidimensional Scaling) plot, which is commonly used to visualize beta diversity. 
+
+### Interpretation of the NMDS Plot
+
+1. **Axes Interpretation**:
+   - **NMDS1** and **NMDS2** represent the two dimensions that best capture the differences in species composition among the samples.
+   - The scales on these axes are arbitrary and do not have direct biological meaning. Instead, the relative positions of the points are what matter.
+
+2. **Points Representation**:
+   - Each point on the plot represents a sample.
+   - The closer two points are to each other, the more similar their species compositions are.
+   - Conversely, points that are farther apart indicate samples with more dissimilar species compositions.
+
+3. **Clustering**:
+   - If points form clusters, it indicates groups of samples that have similar species compositions.
+   - In this plot, there seems to be some clustering, which suggests that certain samples have more similar communities.
+
+4. **Stress Value (not shown)**:
+   - Normally, NMDS plots include a stress value, which indicates how well the two-dimensional plot represents the multi-dimensional data. Lower stress values (typically <0.2) suggest a good representation.
+   - Since the stress value is not shown here, it's important to be cautious in interpreting the distances, but generally, NMDS plots provide a useful visual summary.
+
+### Overall Interpretation
+
+- The NMDS plot shows the beta diversity among the samples, highlighting similarities and differences in their species compositions.
+- Samples that are close to each other on the plot have similar species compositions, while those that are far apart are more dissimilar.
+- Identifying clusters or gradients in the plot can help infer patterns related to environmental gradients, treatments, or other factors influencing the community composition.
+
+
+In the plot we can see that there are some correlation between the samples and the city of the samples.
+
+```{r, include=FALSE}
+#Bacteria
+rel_dataB <- transform_sample_counts(dataB, function(x) x*100 / sum(x) )
+```
+
+```{r, echo=FALSE}
+meta_ord <- ordinate(physeq = rel_dataB, method = "NMDS", 
+                     distance = "bray")
+
+beta_div_plot <- plot_ordination(physeq = rel_dataB, ordination = meta_ord, color="Locality", shape="Specie") +
+  geom_point(size = 4) +  # Adjust point size
+  #geom_text(aes(label = SampleID), vjust = -1.5) +  # Add labels above points
+  scale_color_brewer(palette = "Dark2") +  # Paleta predefinida
+  theme_minimal() +  # Use a minimal theme for clean look
+  theme(legend.position = "right") +  # Position legend on the right
+  labs(title = "Beta Diversity NMDS", x = "NMDS1", y = "NMDS2")+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14, face = "italic") # Tamaño del texto de la leyenda
+  )
+
+beta_div_plot
+
+```
+
+
+
+```{r, include=FALSE}
+#ggsave(filename = "~/miel/Metagenomics/figures/beta_div_plot_Scapto.svg", plot = beta_div_plot, width = 8, height = 8, dpi = 300)
+
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/beta_div_plot.svg", plot = beta_div_plot, width = 8, height = 6, dpi = 300)
+```
+
+
+## Absolute abundance
+
+```{r, include=FALSE}
+absolute_phylum_global <- tax_glom(physeq = dataB, taxrank = "Phylum")
+absolute_phyl_global_df <- psmelt(absolute_phylum_global)
+str(absolute_phyl_global_df)
+
+absolute_phyl_global_df$Phylum <- as.factor(absolute_phyl_global_df$Phylum)
+phylum_colors_abs<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(absolute_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+absolute_plot <- ggplot(data= absolute_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_abs)+
+  labs(x= "Samples", y = "Absolute abundance") +
+  ggtitle("Absolute abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 8, angle = 90), plot.title = element_text(size = 14))
+
+
+absolute_plot
+```
+
+## Relative abundance
+
+
+```{r, include=FALSE}
+rel_phylum_global <- tax_glom(rel_dataB, taxrank = 'Phylum')
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+
+```{r, echo=FALSE}
+relative_plot <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 10, angle = 90), plot.title = element_text(size = 14))
+
+relative_plot
+
+```
+
+
+
+
+```{r, include=FALSE}
+#Subset
+rel_phylum_global <- tax_glom(dataB, taxrank = 'Phylum')
+rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5%abund"
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+#phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+# Define your custom color palette
+phylum_colors_rel <- c(
+  "Bacillota" = "#1f78b4", 
+  "Pseudomonadota" = "#33a02c",
+  "Phyla < 5%abund" = "#6a3d9a"
+  # Add other phyla and their corresponding colors
+)
+
+
+relative_plot_f <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  
+  #facet_grid(~City)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 16), legend.key.size = unit(0.4, 'cm'), axis.title = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16),
+    legend.position = "bottom")
+
+relative_plot_f
+```
+
+```{r}
+Melipona_bacillota <- rel_phyl_global_df %>%
+  filter(Specie == "Melipona beecheii", Phylum == "Bacillota") %>%  # Filtrar las muestras de abeja y el phylum
+  group_by(Sample) %>%  # Agrupar por muestra
+  mutate(total_abundance = sum(Abundance))
+# Mostrar el resultado
+summary(Melipona_bacillota$Abundance)
+
+Scaptotrigona_Bacillota <- rel_phyl_global_df %>%
+  filter(Specie == "Scaptotrigona mexicana", Phylum == "Bacillota") %>%  # Filtrar las muestras de abeja y el phylum
+  group_by(Sample) %>%  # Agrupar por muestra
+  mutate(total_abundance = sum(Abundance))
+# Mostrar el resultado
+summary(Scaptotrigona_Bacillota$Abundance)
+
+
+Melipona_Pseudomonadota <- rel_phyl_global_df %>%
+  filter(Specie == "Melipona beecheii", Phylum == "Pseudomonadota") %>%  # Filtrar las muestras de abeja y el phylum
+  group_by(Sample) %>%  # Agrupar por muestra
+  mutate(total_abundance = sum(Abundance))
+# Mostrar el resultado
+summary(Melipona_Pseudomonadota$Abundance)
+
+Scaptotrigona_Pseudomonadota <- rel_phyl_global_df %>%
+  filter(Specie == "Scaptotrigona mexicana", Phylum == "Pseudomonadota") %>%  # Filtrar las muestras de abeja y el phylum
+  group_by(Sample) %>%  # Agrupar por muestra
+  mutate(total_abundance = sum(Abundance))
+# Mostrar el resultado
+summary(Scaptotrigona_Pseudomonadota$Abundance)
+
+```
+
+
+```{r, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/relative_scapto_phylum.svg", plot = relative_plot_f, width = 7, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Metagenomics/figures/relative_scapto_phylum.svg", plot = relative_plot_f, width = 6, height = 5, dpi = 300)
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+rel_Genus_global <- tax_glom(rel_dataB, taxrank = 'Genus')
+rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
+str(rel_Genus_global_df)
+rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
+Genus_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_Genus_global_df$Genus)))
+```
+
+
+```{r, include=FALSE, echo=FALSE, eval=FALSE}
+relative_plot <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = Genus_colors_rel)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 10, angle = 90), plot.title = element_text(size = 14), legend.position = "bottom")
+
+relative_plot
+
+```
+
+
+
+
+```{r, include=FALSE}
+#Subset
+rel_Genus_global <- tax_glom(dataB, taxrank = 'Genus')
+rel_Genus_global <- transform_sample_counts(rel_Genus_global, function(x) x*100 / sum(x) )
+rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
+str(rel_Genus_global_df)
+rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
+rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
+
+```
+
+```{r, echo=FALSE}
+#Genus_colors_rel<- colorRampPalette(brewer.pal(10,"Dark2")) (length(levels(rel_Genus_global_df$Genus)))
+
+#genus_colors <- c(
+#  "Acetilactobacillus" = "#1f78b4", 
+#  "Apilactobacillus" = "#33a02c",
+#  "Lactobacillus" = "#e31a1c", 
+#  "Nicoliella" = "#ff7f00",
+#  "Pantoea" = "#ff007f",
+#  "Tatumella" = "#b15928",
+#  "Fructobacillus" = "#ffbf00",
+#  "Genus < 5% abund" = "#6a3d9a"
+#)
+
+
+genus_colors <- c(
+  "Acetilactobacillus" = "#002868", 
+  "Apilactobacillus" = "#0077C2",
+  "Lactobacillus" = "#66B2FF", 
+  "Nicoliella" = "#ADD8E1",
+  "Pantoea" = "#008080",
+  "Tatumella" = "#98FB98",
+  "Fructobacillus" = "#007BA7",
+  "Genus < 5% abund" = "#778899"
+)
+
+rel_Genus_global_df$Genus <- factor(rel_Genus_global_df$Genus, levels = c("Acetilactobacillus", "Apilactobacillus", "Fructobacillus", "Lactobacillus", "Nicoliella", "Pantoea", "Tatumella","Genus < 5% abund" ))
+
+relative_plot_g <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = genus_colors)+
+  #facet_wrap(~Locality, drop = TRUE, scales = "free")+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+   theme(#strip.text = element_text(size = 16, face = "bold"),
+         legend.text = element_text(size = 16), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16),
+         legend.position = "bottom")
+
+relative_plot_g
+```
+
+```{r, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/relative_scapto_genus_25.svg", plot = relative_plot_g, width = 10, height = 8, dpi = 300)
+#ggsave(filename = "~/miel/Metagenomics/figures/relative_scapto_genus.svg", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
+
+```
+
+
+
+# Virus
+
+```{r, echo=FALSE}
+# virus
+dataV <- subset_taxa(all_data, Kingdom == "Viruses")
+sample_sums(dataV)
+summary(dataV@otu_table@.Data)
+
+```
+
+
+
+## Alfa diversidad
+
+
+```{r, echo=FALSE}
+alpha_div_plot <- plot_richness(physeq = dataV, 
+                                title = "Alpha diversity indexes Viruses",
+                                measures = c("Observed","Chao1","Shannon")) 
+
+alpha_div_plot
+```
+
+```{r, echo=FALSE}
+summary(dataV@tax_table@.Data== "")
+raw_metagenomesV <- subset_taxa(dataV, Genus != "")
+summary(dataV@tax_table@.Data== "")
+```
+
+
+## Diversidad
+
+```{r, echo=FALSE}
+#Virus
+#Abundancias relativas
+rel_dataV <- transform_sample_counts(dataV, function(x) x*100 / sum(x) )
+```
+
+
+### Diversidad Beta
+
+```{r, echo=FALSE}
+meta_ord <- ordinate(physeq = rel_dataV, method = "NMDS", 
+                     distance = "bray")
+
+beta_div_plot <- plot_ordination(physeq = rel_dataV, ordination = meta_ord)
+
+beta_div_plot
+
+```
+
+
+### Diversidad absoluta
+
+```{r, echo=FALSE}
+absolute_phylum_global <- tax_glom(physeq = dataV, taxrank = "Phylum")
+absolute_phyl_global_df <- psmelt(absolute_phylum_global)
+str(absolute_phyl_global_df)
+
+absolute_phyl_global_df$Phylum <- as.factor(absolute_phyl_global_df$Phylum)
+phylum_colors_abs<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(absolute_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+absolute_plot <- ggplot(data= absolute_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_abs)+
+  labs(x= "Samples", y = "Absolute abundance") +
+  ggtitle("Absolute abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 8, angle = 90), plot.title = element_text(size = 14))
+
+absolute_plot
+```
+
+### Diversidad relativa
+
+
+```{r, echo=FALSE}
+rel_phylum_global <- tax_glom(rel_dataV, taxrank = 'Phylum')
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+
+```{r, echo=FALSE}
+relative_plot <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 10, angle = 90), plot.title = element_text(size = 14))
+
+relative_plot
+
+```
+
+
+
+
+```{r, echo=FALSE}
+#Subset
+rel_phylum_global <- tax_glom(rel_dataV, taxrank = 'Phylum')
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 0.5] <- "Phyla < 0.5% abund."
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+relative_plot_f <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 10, angle = 90), plot.title = element_text(size = 14))
+
+relative_plot_f
+
+```
+
+
+
+
+```{r, echo=FALSE}
+absolute_Genus_global <- tax_glom(physeq = dataV, taxrank = "Genus")
+absolute_Genus_global_df <- psmelt(absolute_Genus_global)
+str(absolute_Genus_global_df)
+
+absolute_Genus_global_df$Genus <- as.factor(absolute_Genus_global_df$Genus)
+Genus_colors_abs<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(absolute_Genus_global_df$Genus)))
+```
+
+```{r, echo=FALSE}
+absolute_plot <- ggplot(data= absolute_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = Genus_colors_abs)+
+  labs(x= "Samples", y = "Absolute abundance") +
+  ggtitle("Absolute abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 8, angle = 90), plot.title = element_text(size = 14))
+
+absolute_plot
+```
+
+
+
+
+```{r, echo=FALSE}
+rel_Genus_global <- tax_glom(rel_dataV, taxrank = 'Genus')
+rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
+str(rel_Genus_global_df)
+rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
+Genus_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_Genus_global_df$Genus)))
+```
+
+
+```{r, echo=FALSE}
+relative_plot <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = Genus_colors_rel)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 6), legend.key.size = unit(0.3, 'cm'), axis.title = element_text(size = 10), axis.text.x = element_text(size = 10, angle = 90), plot.title = element_text(size = 14))
+
+relative_plot
+
+```
+
+
+
+```{r, echo=FALSE}
+#Subset
+rel_Genus_global <- tax_glom(dataV, taxrank = 'Genus')
+rel_Genus_global <- transform_sample_counts(rel_Genus_global, function(x) x*100 / sum(x) )
+rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
+str(rel_Genus_global_df)
+rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
+rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
+Genus_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_Genus_global_df$Genus)))
+```
+
+```{r, echo=FALSE}
+relative_plot_g <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = Genus_colors_rel)+
+  #scale_fill_manual(values = genus_colors)+
+  #facet_wrap(~Locality, drop = TRUE, scales = "free")+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+   theme(#strip.text = element_text(size = 16, face = "bold"),
+         legend.text = element_text(size = 16), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16),
+         legend.position = "bottom")
+
+relative_plot_g
+
+
+```
+
+```{r, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/relative_scapto_genus_virus.svg", plot = relative_plot_g, width = 10, height = 8, dpi = 300)
+#ggsave(filename = "~/miel/Metagenomics/figures/relative_scapto_genus.svg", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
+
+```
+
+
+
+## Eu
+
+```{r}
+unique(all_data@tax_table@.Data[,"Kingdom"])
+```
+
+```{r}
+dataE <- subset_taxa(all_data, Kingdom == "Eukaryota")
+sample_sums(dataE)
+summary(dataE@otu_table@.Data)
+```
+
+```{r}
+dataFungi <- subset_taxa(dataE, Phylum == c("Ascomycota", "Basidiomycota", "Microsporidia"))
+sample_sums(dataFungi)
+summary(dataFungi@otu_table@.Data)
+```
+
+
+```{r}
+#unique(dataE@tax_table@.Data[,"Phylum"])
+#Ascomycota, Basidiomycota, Microsporidia
+
+rel_phylum_global <- tax_glom(dataFungi, taxrank = 'Phylum')
+rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+#rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5%abund"
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+# Define your custom color palette
+#phylum_colors_rel <- c(
+#  "Bacillota" = "#1f78b4", 
+#  "Pseudomonadota" = "#33a02c",
+#  "Phyla < 5%abund" = "#6a3d9a"
+  # Add other phyla and their corresponding colors
+#)
+
+
+relative_plot_f <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  #facet_grid(~City)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 16), legend.key.size = unit(0.4, 'cm'), axis.title = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16),
+    legend.position = "bottom")
+
+relative_plot_f
+```
+
+
+```{r}
+unique(dataE@tax_table@.Data[,"Phylum"])
+#Ascomycota, Basidiomycota, Microsporidia
+
+rel_phylum_global <- tax_glom(dataE, taxrank = 'Phylum')
+rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+str(rel_phyl_global_df)
+#rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5%abund"
+rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+phylum_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_phyl_global_df$Phylum)))
+```
+
+```{r, echo=FALSE}
+# Define your custom color palette
+#phylum_colors_rel <- c(
+#  "Bacillota" = "#1f78b4", 
+#  "Pseudomonadota" = "#33a02c",
+#  "Phyla < 5%abund" = "#6a3d9a"
+  # Add other phyla and their corresponding colors
+#)
+
+
+relative_plot_f <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = phylum_colors_rel)+
+  #facet_grid(~City)+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+  theme(legend.text = element_text(size = 16), legend.key.size = unit(0.4, 'cm'), axis.title = element_text(size = 16), axis.text.x = element_text(size = 16, angle = 90),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16),
+    legend.position = "bottom")
+
+relative_plot_f
+```
+
+
+
+```{r, echo=FALSE}
+#Subset
+rel_Genus_global <- tax_glom(dataE, taxrank = 'Genus')
+rel_Genus_global <- transform_sample_counts(rel_Genus_global, function(x) x*100 / sum(x) )
+rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
+str(rel_Genus_global_df)
+rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 1] <- "Genus < 1% abund"
+rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
+Genus_colors_rel<- colorRampPalette(brewer.pal(8,"Dark2")) (length(levels(rel_Genus_global_df$Genus)))
+```
+
+```{r, echo=FALSE}
+relative_plot_g <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = Genus_colors_rel)+
+  #scale_fill_manual(values = genus_colors)+
+  #facet_wrap(~Locality, drop = TRUE, scales = "free")+
+  labs(x= "Samples", y = "Relative abundance") +
+  ggtitle("Relative abundance")+
+   theme(#strip.text = element_text(size = 16, face = "bold"),
+         legend.text = element_text(size = 16), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16),
+         legend.position = "bottom")
+
+relative_plot_g
+
+
+```
+
+```{r, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/relative_scapto_genus_virus.svg", plot = relative_plot_g, width = 10, height = 8, dpi = 300)
+#ggsave(filename = "~/miel/Metagenomics/figures/relative_scapto_genus.svg", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
+
+```
+
+
+
+## Statistics
+
+
+```{r}
+# Extrae la tabla de abundancias (OTU table)
+otu_table_data <- otu_table(all_data)
+
+# Extrae la tabla de taxonomía
+tax_table_data <- tax_table(all_data)
+# Define los tres phylum de interés
+phylum_of_interest <- c("Ascomycota", "Basidiomycota", "Microsporidia")
+
+# Filtra la tabla de taxonomía por los tres phylum
+subset_biom <- subset_taxa(all_data, Phylum %in% phylum_of_interest)
+# Total de reads en todo el objeto
+total_reads <- sum(otu_table(all_data))
+
+# Total de reads en los tres phylum seleccionados
+subset_reads <- sum(otu_table(subset_biom))
+
+# Calcula el porcentaje de reads
+porcentaje_reads <- (subset_reads / total_reads) * 100
+porcentaje_reads
+
+```
+
+
+
+```{r}
+#dataB
+
+# Filtrar por un género específico
+genero_of_interest <- "Acetilactobacillus"
+subset_genero <- subset_taxa(dataB, Genus == genero_of_interest)
+
+# Filtrar por el metadato `specie`
+specie_of_interest <- "Melipona beecheii"
+subset_specie <- subset_samples(dataB, Specie == specie_of_interest)
+
+# Calcular el total de reads para esa especie
+total_reads_specie <- sum(otu_table(subset_specie))
+
+# Calcular el total de reads del género específico dentro de esa especie
+subset_genero_specie <- subset_taxa(subset_specie, Genus == genero_of_interest)
+genero_reads_specie <- sum(otu_table(subset_genero_specie))
+
+# Calcular el porcentaje
+porcentaje_genero <- (genero_reads_specie / total_reads_specie) * 100
+porcentaje_genero
+```
+
+
+```{r}
+#dataB
+#10.56
+# Filtrar por un género específico
+genero_of_interest <- "Apilactobacillus"
+subset_genero <- subset_taxa(dataB, Genus == genero_of_interest)
+
+# Filtrar por el metadato `specie`
+specie_of_interest <- "Scaptotrigona mexicana"
+subset_specie <- subset_samples(dataB, Specie == specie_of_interest)
+
+# Calcular el total de reads para esa especie
+total_reads_specie <- sum(otu_table(subset_specie))
+
+# Calcular el total de reads del género específico dentro de esa especie
+subset_genero_specie <- subset_taxa(subset_specie, Genus == genero_of_interest)
+genero_reads_specie <- sum(otu_table(subset_genero_specie))
+
+# Calcular el porcentaje
+porcentaje_genero <- (genero_reads_specie / total_reads_specie) * 100
+porcentaje_genero
+```

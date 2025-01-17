@@ -1,0 +1,287 @@
+---
+title: 'Especies más cercanas MAGS'
+subtitle: 'Reads'
+author:
+ - Adriana Haydé Contreras Peruyero (haydeeperuyero@gmail.com)
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+```{r}
+library("phyloseq")
+library("ggplot2")
+library("RColorBrewer")
+library("patchwork")
+library(readr)
+library(tidyverse)
+#setwd("D:/Users/hayde/Documents/miel/miel/Metagenomics")
+```
+
+```{r}
+df <- read_csv("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/especies_cercanas_mags.csv")
+head(df)
+```
+
+
+```{r}
+df_split <- strsplit(df$classification, ";")
+
+# Luego, puedes usar unlist para expandir la lista resultante en una matriz
+# Nota: Esto llenará con NA si hay diferentes longitudes en los elementos de la lista
+df_matrix <- do.call(rbind, df_split)
+
+# Convertimos la matriz resultante en un nuevo DataFrame
+df_new <- as.data.frame(df_matrix)
+
+
+
+# Renombramos las columnas si es necesario
+colnames(df_new) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+  
+#  paste0("tax_", 1:ncol(df_new))
+
+df_new$Kingdom <- substring(df_new$Kingdom, 4)
+df_new$Phylum <- substring(df_new$Phylum, 4)
+df_new$Class <- substring(df_new$Class, 4)
+df_new$Order <- substring(df_new$Order, 4)
+df_new$Family <- substring(df_new$Family, 4)
+df_new$Genus <- substring(df_new$Genus, 4)
+df_new$Species <- substring(df_new$Species, 4)
+
+
+
+# Si deseas unir este nuevo DataFrame a tu DataFrame original, puedes usar cbind
+df_final <- cbind(df[,2:4], df_new)
+df_final <- cbind(df_final, df$closest_placement_ani)
+
+# Extraer la palabra "Melli" o "Scapto" de la primera columna y agregarla como una nueva columna
+df_final$HSpecie <- sub(".*(Melli|Scapto).*", "\\1", df_final$user_genome)
+
+```
+
+```{r}
+df_final$SpecieBee <- c("Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii" ,"Melipona beecheii","Melipona beecheii", "Melipona beecheii","Melipona beecheii","Melipona beecheii" ,"Melipona beecheii","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana", "Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana")
+```
+
+```{r}
+df_final$genome_ID <- gsub("([0-9]+)_([A-Za-z]+)\\.(\\d+)", "\\2_\\1.\\3", df$user_genome)
+```
+
+
+```{r}
+meliponas <- df_final %>%
+  filter(SpecieBee=="Melipona beecheii")
+```
+
+
+```{r}
+p <- ggplot(df_final, aes(x = Genus, y = genome_ID)) +
+  geom_point(aes(size = Completeness, color = Contamination), shape = 19) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") + 
+  labs(x = "Genus", y = "Sample", size = "Completeness", color = "Contamination") +
+  theme_minimal() +
+  theme(#strip.text = element_text(size = 16, face = "bold"),
+         legend.text = element_text(size = 16), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust=1),
+         axis.text.y = element_text(size = 12), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16)
+         #legend.position = "bottom"
+         )
+p
+
+```
+
+```{r}
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/genomes_mags.svg", plot = p, width = 10, height = 8, dpi = 300)
+```
+
+
+
+```{r}
+df_split <- strsplit(df$closest_placement_taxonomy, ";")
+
+# Luego, puedes usar unlist para expandir la lista resultante en una matriz
+# Nota: Esto llenará con NA si hay diferentes longitudes en los elementos de la lista
+df_matrix <- do.call(rbind, df_split)
+
+# Convertimos la matriz resultante en un nuevo DataFrame
+df_new <- as.data.frame(df_matrix)
+
+
+
+# Renombramos las columnas si es necesario
+colnames(df_new) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+  
+#  paste0("tax_", 1:ncol(df_new))
+
+df_new$Kingdom <- substring(df_new$Kingdom, 4)
+df_new$Phylum <- substring(df_new$Phylum, 4)
+df_new$Class <- substring(df_new$Class, 4)
+df_new$Order <- substring(df_new$Order, 4)
+df_new$Family <- substring(df_new$Family, 4)
+df_new$Genus <- substring(df_new$Genus, 4)
+df_new$Species <- substring(df_new$Species, 4)
+
+
+
+# Si deseas unir este nuevo DataFrame a tu DataFrame original, puedes usar cbind
+df_final <- cbind(df[,2:4], df_new)
+df_final <- cbind(df_final, df$closest_placement_ani)
+
+# Extraer la palabra "Melli" o "Scapto" de la primera columna y agregarla como una nueva columna
+df_final$HSpecie <- sub(".*(Melli|Scapto).*", "\\1", df_final$user_genome)
+
+```
+
+```{r}
+df_final$SpecieBee <- c("Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii","Melipona beecheii" ,"Melipona beecheii","Melipona beecheii", "Melipona beecheii","Melipona beecheii","Melipona beecheii" ,"Melipona beecheii","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana", "Scaptotrigona mexicana","Scaptotrigona mexicana","Scaptotrigona mexicana")
+```
+
+```{r}
+df_final$genome_ID <- gsub("([0-9]+)_([A-Za-z]+)\\.(\\d+)", "\\2_\\1.\\3", df$user_genome)
+```
+
+```{r}
+colnames(df_final)[colnames(df_final) == "df$closest_placement_ani"] <- "ANI"
+```
+
+```{r}
+#library(dplyr)
+
+# Convertir "N/A" a NA y asegurar que ANI sea numérico
+df_final <- df_final %>%
+  mutate(ANI = as.numeric(ANI))  # Convierte valores no numéricos a NA
+
+# Crear el heatmap
+p <- ggplot(df_final, aes(x = Species, y = genome_ID, fill = ANI)) +
+  geom_tile(color = "white") +  # Dibujar los cuadrados, con borde blanco
+  scale_fill_gradient(
+    low = "lightblue", high = "darkblue", na.value = "white"  # Color blanco para los NA
+  ) +
+  labs(x = "Species", y = "Genome ID", fill = "ANI") +  # Etiquetas de los ejes y leyenda
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 16), 
+    axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5, hjust=1),
+    axis.text.y = element_text(size = 12), 
+    plot.title = element_text(size = 20), 
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"), 
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 16)
+  )
+
+p
+
+
+```
+
+```{r}
+#library(dplyr)
+#library(tidyr)
+library(pheatmap)
+
+# Supongamos que df_final ya está definido y tiene las columnas: Species, genome_ID, ANI
+
+# Convertir el DataFrame a formato de matriz
+heatmap_data <- df_final %>% 
+  filter(!is.na(Species), !is.na(ANI)) %>%
+  select(Species, Completeness, Contamination, genome_ID, ANI) %>%
+  pivot_wider(names_from = Species, values_from = ANI)  # Convertir a formato ancho
+
+ANI <- cbind(heatmap_data$genome_ID, heatmap_data[,1:2])
+ANI <- cbind(ANI, heatmap_data$`Acetilactobacillus jinshanensis`)
+
+colnames(ANI)[colnames(ANI) == "heatmap_data$genome_ID"] <- "Strain"
+
+colnames(ANI)[colnames(ANI) == "heatmap_data$`Acetilactobacillus jinshanensis`"] <- "Acetilactobacillus jinshanensis ANI"
+
+ANI <- ANI[c(1,4,2,3)]
+
+
+# Convertir a matriz y manejar NAs
+#heatmap_matrix <- as.matrix(heatmap_data[,-1])  # Excluir la columna genome_ID
+#heatmap_matrix[is.na(heatmap_matrix)] <- 0 
+#rownames(heatmap_matrix) <- heatmap_data$genome_ID  # Asignar nombres de fila
+
+
+```
+```{r}
+# Crear el heatmap
+pheatmap(heatmap_matrix,
+         color = colorRampPalette(c("lightblue", "darkblue"))(50),  # Escala de colores
+         show_rownames = TRUE, 
+         show_colnames = TRUE, 
+         cluster_rows = TRUE,  # Puedes cambiar a FALSE si no deseas clustering
+         cluster_cols = TRUE)
+```
+
+```{r}
+scaptos <- df_final %>%
+  filter(SpecieBee=="Scaptotrigona mexicana")
+```
+
+
+```{r}
+p <- ggplot(scaptos, aes(x = Genus, y = user_genome)) +
+  geom_point(aes(size = Completeness, color = Contamination), shape = 19) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") + 
+  labs(x = "Genus", y = "Sample", size = "Completeness", color = "Contamination") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p
+
+```
+
+
+```{r}
+p <- ggplot(df_final, aes(x = Genus, y = user_genome)) +
+  geom_point(aes(size = Completeness, color = Contamination), shape = 19) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") + 
+  labs(x = "Genus", y = "Sample", size = "Completeness", color = "Contamination") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p
+
+```
+
+
+```{r}
+
+mags <- df[,c(2,3,4,6)]
+
+df_a <- as.data.frame(df_a)
+
+df_b <- df[,c(2,3,4,13)]
+
+df_ANI <- df_b[-c(2,3,10,11,19,25),]
+
+
+df_b <- df_final[,c(1,2,3,10,11)]
+
+df_ANI <- df_b[-c(2,3,10,11,19,25),]
+
+```
+
+
+```{r}
+write.csv(mags, "D:/Users/hayde/Documents/miel/miel/Metagenomics/data/mags.csv", row.names = FALSE)
+
+write.csv(df_ANI, "D:/Users/hayde/Documents/miel/miel/Metagenomics/data/ANI.csv", row.names = FALSE)
+```
+
+
+
+write_csv(df_a, "mags.csv", delim=",")
+
+
