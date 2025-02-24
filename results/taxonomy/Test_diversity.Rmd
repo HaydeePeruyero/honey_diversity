@@ -1,5 +1,5 @@
 ---
-title: 'Diversity of *Scaptotrigona Mexicana* and *Melipona beecheii*'
+title: 'Test of Diversity of *Scaptotrigona Mexicana* and *Melipona beecheii*'
 author:
  - Haydé Peruyero (haydeeperuyero@gmail.com)
 date: "`r Sys.Date()`"
@@ -28,7 +28,7 @@ First, we need to read the biom files. In this file, we found the following **Ki
 
 ```{r, echo=FALSE}
 # read the biom file
-raw_metagenomes <- import_biom("D:/Users/hayde/Documents/R_sites/honey_diversity/data/honey_PFP.biom")
+raw_metagenomes <- import_biom("D:/Users/hayde/Documents/R_sites/honey_diversity/data/honey_PF.biom")
 
 # short the names, quit the first 4 characteres
 raw_metagenomes@tax_table@.Data <- substring(raw_metagenomes@tax_table@.Data, 4)
@@ -81,7 +81,7 @@ sample_names <- gsub("(\\d+)_Scapto", "Scapto_\\1", sample_names)
 sample_names(all_data) <- sample_names
 
 # Verificar los nuevos nombres de las muestras
-#sample_names(all_data)
+sample_names(all_data)
 ```
 
 ```{r, echo = FALSE}
@@ -486,6 +486,7 @@ rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 #str(rel_phyl_global_df)
 rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5% abund"
 rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+unique(rel_phyl_global_df$Phylum)
 ```
 
 ```{r, echo=FALSE}
@@ -540,7 +541,7 @@ rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
 #str(rel_Genus_global_df)
 rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
 rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
-
+unique(rel_Genus_global_df$Genus)
 ```
 
 ```{r, echo=FALSE}
@@ -712,6 +713,7 @@ rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 #str(rel_phyl_global_df)
 rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5% abund"
 rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+unique(rel_phyl_global_df$Phylum)
 ```
 
 ```{r, echo=FALSE}
@@ -720,7 +722,7 @@ phylum_colors_rel <- c(
   "Duplornaviricota" = "#1f78b4",  
   "Nucleocytoviricota" = "#a1d99b", 
   "Uroviricota" = "#fb6a4a",
-  #"Artverviricota" = "#c994c7",
+  "Artverviricota" = "#c994c7",
   #"Kitrinoviricota" = "#fdae6b",
   "Phyla < 5% abund" = "#778899"
 )
@@ -762,7 +764,7 @@ rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
 #str(rel_Genus_global_df)
 rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
 rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
-
+unique(rel_Genus_global_df$Genus)
 ```
 
 ```{r, echo=FALSE}
@@ -929,7 +931,7 @@ beta_div_plot
 ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/beta_div_plot_eukaryota.svg", plot = beta_div_plot, width = 8, height = 6, dpi = 300)
 ```
 
-Existen 16 Phylums diferentes y dentro de esos solo 3 son Fungi. Se va a filtrar por solo esos.
+Existen 14 Phylums diferentes y dentro de esos solo 3 son Fungi. Se va a filtrar por solo esos.
 
 
 ```{r, echo=FALSE}
@@ -941,7 +943,6 @@ rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
 unique(rel_phyl_global_df$Phylum)
 ```
-
 ```{r, echo=FALSE}
 # Define your custom color palet
 
@@ -966,20 +967,20 @@ relative_plot_phylum
 
 
 ```{r, echo=FALSE}
-#los dos primeros son del mismo y los otros igual son del mismo pero del mucoromycota no parece que hay o es mínimo
-data <- subset_taxa(all_data, Kingdom == "Eukaryota" & Genus != "Homo" )
-data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia"))
+data <- subset_taxa(data, Phylum == c("Mucoromycota", "Ascomycota", "Basidiomycota", "Microsporidia")) 
+                       
 #sample_sums(data)
 #summary(data@otu_table@.Data)
 ```
 
 ```{r}
-rel_phylum_global <- tax_glom(data2, taxrank = 'Phylum')
+rel_phylum_global <- tax_glom(data, taxrank = 'Phylum')
 rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
 rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 #str(rel_phyl_global_df)
 #rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5% abund"
 rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
+unique(rel_phyl_global_df$Phylum)
 ```
 
 
@@ -987,8 +988,9 @@ rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
 # Define your custom color palette
 phylum_colors_rel <- c(
   "Ascomycota" = "#1f78b4",  
-  "Basidiomycota" = "#287E36" 
-  #"Microsporidia" = "#a1d99b"
+  "Basidiomycota" = "#a1d99b",
+  "Mucoromycota" = "#fb789b",
+  "Microsporidia" = "#fb6a4a"
 )
 
 relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
@@ -1020,13 +1022,13 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/rela
 
 ```{r, include=FALSE}
 #Subset
-rel_Genus_global <- tax_glom(data2, taxrank = 'Genus')
+rel_Genus_global <- tax_glom(data, taxrank = 'Genus')
 rel_Genus_global <- transform_sample_counts(rel_Genus_global, function(x) x*100 / sum(x) )
 rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
 #str(rel_Genus_global_df)
 rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
 rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
-
+unique(rel_Genus_global_df$Genus)
 ```
 
 ```{r, echo=FALSE}
@@ -1055,32 +1057,12 @@ levels(rel_Genus_global_df$Genus)
 
 ```
 
-```{r}
-niveles <- c("Candida", "Eremothecium", "Kluyveromyces", "Saccharomyces", "Sugiyamaella", "Zygotorulaspora",  
-             "Aspergillus", "Fusarium", "Pochonia", "Purpureocillium", "Pyrenophora", "Pyricularia", "Thermothielavioides", "Trichoderma", "Zymoseptoria",
-             "Cutaneotrichosporon", "Cryptococcus", "Kwoniella", "Marasmius", 
-             "Genus < 5% abund")
-
-rel_Genus_global_df$Genus <- factor(rel_Genus_global_df$Genus, levels = niveles)
-
-# Verificar los niveles ordenados
-levels(rel_Genus_global_df$Genus)
-```
-
 ```{r, echo=FALSE}
-
-blues_pubu <- c('#E5FFFF',"#66F0FF", "#B2F2FF","#80D4FF" ,"#3388FF", "#0040FF",
-  "#D4E7F3", "#0097BB", "#96B7E2", "#649CD4","#3261A4", "#3581C1",
-                "#135FA5", "#083E81", "#273871")
-
-greens_selected <- c("#BAE0B1", "#6EB769", "#287E36", "#005A32")
-
-colores <- c(blues_pubu, greens_selected, "#778899")
 
 relative_plot_g <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
   geom_bar(aes(), stat="identity", position="stack")+
   #scale_fill_paletteer_d("colorBlindness::Blue2DarkOrange18Steps")+
-  scale_fill_manual(values = colores)+
+  #scale_fill_manual(values = colors)+
   labs(x= "Samples", y = "Relative abundance") +
    theme(legend.text = element_text(size = 16, face = "italic"), 
          legend.key.size = unit(0.4, 'cm'), 
@@ -1113,7 +1095,7 @@ otu_table_data <- otu_table(all_data)
 # Extrae la tabla de taxonomía
 tax_table_data <- tax_table(all_data)
 # Define los tres phylum de interés
-phylum_of_interest <- c("Ascomycota", "Basidiomycota", "Microsporidia", "Mucoromycota")
+phylum_of_interest <- c("Ascomycota", "Basidiomycota", "Microsporidia")
 
 # Filtra la tabla de taxonomía por los tres phylum
 subset_biom <- subset_taxa(all_data, Phylum %in% phylum_of_interest)
@@ -1168,30 +1150,6 @@ Porcentaje del género *Apilactobacillus* en *Scaptotrigona mexicana*.
 #10.56
 # Filtrar por un género específico
 genero_of_interest <- "Apilactobacillus"
-subset_genero <- subset_taxa(data, Genus == genero_of_interest)
-
-# Filtrar por el metadato `specie`
-specie_of_interest <- "Scaptotrigona mexicana"
-subset_specie <- subset_samples(data, Specie == specie_of_interest)
-
-# Calcular el total de reads para esa especie
-total_reads_specie <- sum(otu_table(subset_specie))
-
-# Calcular el total de reads del género específico dentro de esa especie
-subset_genero_specie <- subset_taxa(subset_specie, Genus == genero_of_interest)
-genero_reads_specie <- sum(otu_table(subset_genero_specie))
-
-# Calcular el porcentaje
-porcentaje_genero <- (genero_reads_specie / total_reads_specie) * 100
-porcentaje_genero
-```
-
-
-```{r}
-#dataB
-#10.56
-# Filtrar por un género específico
-genero_of_interest <- "Lactobacillus"
 subset_genero <- subset_taxa(data, Genus == genero_of_interest)
 
 # Filtrar por el metadato `specie`

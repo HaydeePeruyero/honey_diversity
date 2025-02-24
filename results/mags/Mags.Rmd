@@ -19,11 +19,10 @@ library("RColorBrewer")
 library("patchwork")
 library(readr)
 library(tidyverse)
-#setwd("D:/Users/hayde/Documents/miel/miel/Metagenomics")
 ```
 
 ```{r}
-df <- read_csv("D:/Users/hayde/Documents/miel/miel/Metagenomics/data/especies_cercanas_mags.csv")
+df <- read_csv("D:/Users/hayde/Documents/R_sites/honey_diversity/data/especies_cercanas_mags.csv")
 head(df)
 ```
 
@@ -102,7 +101,7 @@ p
 ```
 
 ```{r}
-ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/genomes_mags.svg", plot = p, width = 10, height = 8, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/genomes_mags.svg", plot = p, width = 10, height = 8, dpi = 300)
 ```
 
 
@@ -275,13 +274,11 @@ df_ANI <- df_b[-c(2,3,10,11,19,25),]
 
 
 ```{r}
-write.csv(mags, "D:/Users/hayde/Documents/miel/miel/Metagenomics/data/mags.csv", row.names = FALSE)
+write.csv(mags, "D:/Users/hayde/Documents/R_sites/honey_diversity/data/mags.csv", row.names = FALSE)
 
-write.csv(df_ANI, "D:/Users/hayde/Documents/miel/miel/Metagenomics/data/ANI.csv", row.names = FALSE)
+write.csv(df_ANI, "D:/Users/hayde/Documents/R_sites/honey_diversity/data/ANI.csv", row.names = FALSE)
 ```
 
 
-
-write_csv(df_a, "mags.csv", delim=",")
 
 
