@@ -1097,7 +1097,7 @@ relative_plot_g
 ```
 
 ```{r, eval=FALSE, include=FALSE}
-ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_genus_eukaryota.svg", plot = relative_plot_g, width = 11, height = 8, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_genus_eukaryota.svg", plot = relative_plot_g, width = 13, height = 8, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_genus_eukaryota.png", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
 ```
 
