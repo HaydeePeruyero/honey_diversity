@@ -101,7 +101,7 @@ Obtain the quantity of reads in each sample.
 dprof <- data.frame(Samples = colnames(all_data@otu_table@.Data),
                     Reads = sample_sums(all_data),
                     Specie = all_data@sam_data@.Data[[15]])
-#dprof
+dprof
 ```
 
 
@@ -457,6 +457,45 @@ beta_div_plot
 ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/beta_div_plot.svg", plot = beta_div_plot, width = 8, height = 6, dpi = 300)
 ```
 
+
+
+```{r, echo=FALSE}
+meta_ord <- ordinate(physeq = rel_data, method = "NMDS", 
+                     distance = "bray")
+
+beta_div_plot <- plot_ordination(physeq = rel_data, ordination = meta_ord, color="Zootechnic_mangement", shape="Specie") +
+  geom_point(size = 4) +  # Adjust point size
+  #geom_text(aes(label = SampleID), vjust = -1.5) +  # Add labels above points
+  #scale_color_brewer(palette = "Dark2") +  # Paleta predefinida
+  scale_color_manual(values = c("#3E2723", "#D2691E", "#A0522D", "#DEB887"))+
+  theme_minimal() +  # Use a minimal theme for clean look
+  theme(legend.position = "right") +  # Position legend on the right
+  #labs(title = "Beta Diversity NMDS", x = "NMDS1", y = "NMDS2")+
+  labs(x = "NMDS1", y = "NMDS2")+
+  theme(
+    text = element_text(size = 16), # Cambia el tipo de letra y tamaño
+    plot.title = element_text(size = 16, face = "bold"), # Tamaño y estilo del título
+    axis.title.x = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje X
+    axis.title.y = element_text(size = 14, face = "bold"), # Tamaño y estilo del título del eje Y
+    axis.text.x = element_text(size = 12), # Tamaño de las etiquetas del eje X
+    axis.text.y = element_text(size = 12), # Tamaño de las etiquetas del eje Y
+    legend.title = element_text(size = 14, face = "bold"), # Tamaño y estilo del título de la leyenda
+    legend.text = element_text(size = 14, face = "italic") # Tamaño del texto de la leyenda
+  )+
+  guides(
+    color = guide_legend(override.aes = list(shape = 15))
+  )
+beta_div_plot
+
+```
+
+
+
+```{r, include=FALSE}
+#ggsave(filename = "~/miel/Metagenomics/figures/beta_div_plot_Scapto.svg", plot = beta_div_plot, width = 8, height = 8, dpi = 300)
+
+ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/beta_div_plot_zoot.svg", plot = beta_div_plot, width = 8, height = 6, dpi = 300)
+```
 
 ## Relative abundance
 
