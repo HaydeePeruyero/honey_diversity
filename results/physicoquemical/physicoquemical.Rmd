@@ -49,10 +49,10 @@ df$ID <- factor(df$ID, levels = unique(df$ID))
 ```
 
 ```{r, echo=FALSE}
-ggplot(df, aes(x = factor(1),ID , fill= pH)) + 
+pH <- ggplot(df, aes(x = factor(1),ID , fill= pH)) + 
   geom_tile(color = "white",width = 1, height = 1)+
-  scale_fill_distiller(palette = "YlOrBr")+
-  #scale_fill_viridis(discrete=FALSE, option = "C", , direction = -1) +
+  #scale_fill_distiller(palette = "YlOrBr")+
+  scale_fill_viridis(discrete=FALSE) +
   #scale_fill_thermal(name = "pH") +
   theme_minimal() +
   labs(y = "Samples")+
@@ -67,7 +67,17 @@ ggplot(df, aes(x = factor(1),ID , fill= pH)) +
          axis.title.y = element_text(size = 16, face = "bold"), 
          legend.title = element_text(size = 16))+
   coord_fixed(ratio = 1)
+
+pH
 ```
+
+
+```{r, eval=FALSE, include=FALSE}
+#ggsave(filename = "~/miel/Metagenomics/figures/deep_Scapto.svg", plot = reads, width = 8, height = 5, dpi = 300)
+
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/heatmap_pH.svg", plot = pH, width = 3, height = 6, dpi = 300)
+```
+
 
 ```{r}
 ggplot(df, aes(x = factor(1),ID , fill= Moisture)) + 
@@ -109,28 +119,69 @@ ggplot(df, aes(x = factor(1),ID , fill= Conductivity)) +
 
 ```{r}
 df_long <- df %>%
-  pivot_longer(cols = c(pH, Moisture, Conductivity, Ash, HMF, Total_sugar, Colorimetry), # Añadir las otras columnas aquí
+  pivot_longer(cols = c(pH, Moisture, Conductivity, Ash, Total_sugar, Colorimetry), # Añadir las otras columnas aquí
                names_to = "Parameter",
                values_to = "Value")
+```
 
+```{r}
 # Graficar boxplot con jitter para todas las columnas en un solo gráfico
-ggplot(df_long, aes(x = Specie, y = Value, fill = Specie)) +
-  geom_boxplot() +
+box_plot_phy <- ggplot(df_long, aes(x = Specie, y = Value, fill = Specie)) +
+  geom_boxplot(width = 0.2) +
   geom_jitter(color="black", size=1, alpha=0.9) +
   scale_fill_manual(values = c("#b8860b", "#FFBF00")) +  # Personalizar colores para las especies
   facet_wrap(~Parameter, scales = "free_y") +  # Facetas para cada variable
   theme_ipsum() +
-  theme_light()+
-  theme(legend.position = "none")+
-  theme(legend.text = element_text(size = 16), 
-        axis.title = element_text(size = 16), 
+  theme_gray()+
+  theme(legend.position = "right")+
+  theme(strip.text = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 16), 
+        axis.title = element_text(size = 20), 
         #axis.text.x = element_text(size = 14, face="italic", angle = 45, hjust = 1),
         axis.text.x = element_blank(),
         axis.text.y = element_text(size = 16), 
         plot.title = element_text(size = 20), 
         axis.title.x = element_text(size = 16, face = "bold"),
         axis.title.y = element_text(size = 16, face = "bold"), 
-        legend.title = element_text(size = 16))+
-  xlab("")
+        legend.title = element_text(size = 18))+
+  xlab("")+
+  labs(fill = "Specie")
+
+
+box_plot_phy
+```
+
+
+```{r, eval=FALSE, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/boxplots.svg", plot = box_plot_phy, width = 10, height = 6, dpi = 300)
+```
+
+
+```{r}
+ggplot(df_long, aes(x = Parameter, y = Value, fill = Specie)) +
+  geom_boxplot(width = 0.2) +  # Hace los boxplots más delgados
+  geom_jitter(color="black", size=1, alpha=0.9, width = 0.15) +  # Agrega dispersión
+  
+  scale_fill_manual(values = c("#b8860b", "#FFBF00")) +  # Personalizar colores para las especies
+
+  # Facet en una sola fila sin espacios extras
+  facet_grid(~ Parameter, scales = "free_y", space = "free_x") +
+
+  theme_ipsum() +
+  theme(
+    legend.position = "bottom",  # Ubica la leyenda abajo
+    legend.text = element_text(size = 16), 
+    axis.title = element_text(size = 16), 
+    axis.text.x = element_blank(),  # Eliminar etiquetas de los ejes
+    axis.ticks.x = element_blank(), 
+    axis.text.y = element_text(size = 16), 
+    plot.title = element_text(size = 20), 
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"), 
+    legend.title = element_text(size = 18)
+  ) +
+  
+  xlab("") +
+  labs(fill = "Specie")  # Título de la leyenda de colores
 
 ```

@@ -262,7 +262,7 @@ relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundanc
 relative_plot_phylum
 ```
 ```{r, eval=FALSE, include=FALSE}
-ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_kingdom.svg", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_kingdom.svg", plot = relative_plot_phylum, width = 8, height = 7, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum.svg", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
 ```
 
