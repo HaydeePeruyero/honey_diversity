@@ -85,13 +85,14 @@ sample_names(all_data) <- sample_names
 ```
 
 ```{r, echo = FALSE}
+# Wrong
 # the porcentajes of each kingdom
-tax_table <- as.data.frame(tax_table(all_data))
-reino_col <- "Kingdom"  # Ajusta el nombre de la columna si es diferente
-reino_counts <- table(tax_table[[reino_col]])
-total_observaciones <- sum(reino_counts)
-porcentajes <- (reino_counts / total_observaciones) * 100
-porcentajes
+#tax_table <- as.data.frame(tax_table(all_data))
+#reino_col <- "Kingdom"  # Ajusta el nombre de la columna si es diferente
+#reino_counts <- table(tax_table[[reino_col]])
+#total_observaciones <- sum(reino_counts)
+#porcentajes <- (reino_counts / total_observaciones) * 100
+#porcentajes
 ```
 
 
@@ -142,15 +143,37 @@ We will work with the `Bacteria` subset.
 
 # Kigdoms
 
+```{r}
+kingdoms <- tax_glom(raw_metagenomes_all, taxrank = 'Kingdom')
+
+# Convertir a data.frame para visualización y análisis
+kingdoms_df <- psmelt(kingdoms)
+
+porcentajes <- kingdoms_df %>% 
+  group_by(Kingdom) %>% 
+  summarise(Abundancia = sum(Abundance))%>% 
+  ungroup() %>% 
+  mutate(Porcentaje = Abundancia/sum(Abundancia)*100)
+
+porcentajes
+```
+
+
 ```{r, echo=FALSE}
 # Resumen inicial de los datos faltantes
 #summary(all_data@tax_table@.Data == "")
 
 # Filtrar los datos eliminando Archaea y Homo sapiens
+#raw_metagenomes_all <- subset_taxa(
+#  all_data,
+#  Kingdom != "Archaea" & !(Kingdom == "Eukaryota" & Genus == "Homo")
+#)
+
 raw_metagenomes_all <- subset_taxa(
   all_data,
-  Kingdom != "Archaea" & !(Kingdom == "Eukaryota" & Genus == "Homo")
+  !(Kingdom == "Eukaryota" & Genus == "Homo")
 )
+
 
 # Resumen de datos después del filtrado
 #summary(raw_metagenomes_all@tax_table@.Data == "")
@@ -167,15 +190,22 @@ abs_phyl_global_df <- psmelt(abs_phylum_global)
 # Convertir la columna 'Kingdom' en factor
 abs_phyl_global_df$Kingdom <- as.factor(abs_phyl_global_df$Kingdom)
 ```
+
+```{r}
+kingdoms <- psmelt()
+```
+
+
 ```{r, echo=FALSE}
 # Define your custom color palette
 phylum_colors_rel <- c(
   "Bacteria" = "#4F81BD", ##1f78b4", 
   "Eukaryota" = "#9BBB59"  , #"#33a02c",
-  "Viruses" = "#F79646"#"#6a3d9a"
+  "Viruses" = "#F79646",#"#6a3d9a"
+  "Archaea" = "red"
 )
 
-abs_phyl_global_df$Kingdom <- factor(abs_phyl_global_df$Kingdom, levels = c("Bacteria", "Viruses", "Eukaryota"))
+abs_phyl_global_df$Kingdom <- factor(abs_phyl_global_df$Kingdom, levels = c("Bacteria", "Viruses", "Eukaryota", "Archaea"))
 
 relative_plot_phylum <- ggplot(data=abs_phyl_global_df, aes(x=Sample, y=Abundance, fill=Kingdom))+ 
   geom_bar(aes(), stat="identity", position="stack")+
@@ -207,16 +237,18 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/abso
 
 # Subconjunto eliminando Archaea y Homo sapiens
 # Ajusta los nombres de las columnas de acuerdo con tu tax_table
-raw_metagenomes_all <- subset_taxa(
-  all_data,
-  Kingdom != "Archaea" & !(Kingdom == "Eukaryota" & Genus == "Homo")
-)
+#raw_metagenomes_all <- subset_taxa(
+#  all_data,
+#  Kingdom != "Archaea" & !(Kingdom == "Eukaryota" & Genus == "Homo")
+#)
+
+#raw_metagenomes_all <- subset_taxa(all_data)
 
 # Resumen de datos después del filtrado
 #summary(raw_metagenomes_all@tax_table@.Data == "")
 
 # Agrupar por Kingdom
-rel_phylum_global <- tax_glom(raw_metagenomes_all, taxrank = 'Kingdom')
+rel_phylum_global <- tax_glom(all_data, taxrank = 'Kingdom')
 
 # Transformar los datos a porcentajes por muestra
 rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x * 100 / sum(x))
@@ -238,10 +270,11 @@ rel_phyl_global_df$Kingdom <- as.factor(rel_phyl_global_df$Kingdom)
 phylum_colors_rel <- c(
   "Bacteria" = "#4F81BD", ##1f78b4", 
   "Eukaryota" = "#9BBB59"  , #"#33a02c",
-  "Viruses" = "#F79646"#"#6a3d9a"
+  "Viruses" = "#F79646",#"#6a3d9a"
+  "Archaea" = "red"
 )
 
-rel_phyl_global_df$Kingdom <- factor(rel_phyl_global_df$Kingdom, levels = c("Bacteria", "Viruses", "Eukaryota"))
+rel_phyl_global_df$Kingdom <- factor(rel_phyl_global_df$Kingdom, levels = c("Bacteria", "Viruses", "Eukaryota", "Archaea"))
 
 relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Kingdom))+ 
   geom_bar(aes(), stat="identity", position="stack")+
@@ -261,6 +294,9 @@ relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundanc
 
 relative_plot_phylum
 ```
+
+
+
 ```{r, eval=FALSE, include=FALSE}
 ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_kingdom.svg", plot = relative_plot_phylum, width = 8, height = 7, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum.svg", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
@@ -1140,6 +1176,118 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/rela
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_genus_eukaryota.png", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
 ```
 
+```{r}
+data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")) 
+rel_Genus_global <- tax_glom(data2, taxrank = 'Genus')
+rel_Genus_global_df<-psmelt(rel_Genus_global)
+unique(rel_Gen)
+
+```
+
+
+```{r}
+
+#homo <- c("Chordata")
+#hongos <- c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")
+#otros <- 
+  
+data <- subset_taxa(all_data, Kingdom == "Eukaryota")
+eukaryas <- as.data.frame(tax_table(data))
+
+# Definir los grupos de Phylum
+phylum_grupos <- eukaryas %>%
+  mutate(Phylum_Categoria = case_when(
+    Phylum == "Chordata" ~ "Chordata",
+    Phylum %in% c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia") ~ "Fungi",
+    TRUE ~ "Others"
+  ))
+
+# Verificar la distribución
+table(phylum_grupos$Phylum_Categoria)
+```
+
+```{r}
+
+#homo <- c("Chordata")
+#hongos <- c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")
+#otros <- 
+  
+data <- subset_taxa(all_data, Kingdom == "Eukaryota")
+eukaryas <- as.data.frame(tax_table(data))
+
+# Definir los grupos de Phylum
+phylum_grupos <- eukaryas %>%
+  mutate(Phylum_Categoria = case_when(
+    Phylum %in% c("Chordata") ~ "Animal",
+    Phylum %in% c("Streptophyta","Chlorophyta") ~ "Plantae",
+    Phylum %in% c("Rhodophyta", "Bacillariophyta") ~ "Algae",
+    Phylum %in% c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia") ~ "Fungi",
+    Phylum %in% c("Euglenozoa", "Parabasalia", "Fornicata", "Evosea", "Apicomplexa", "Oomycota", "Ciliophora", "Cercozoa") ~ "Protists"
+  ))
+
+# Verificar la distribución
+table(phylum_grupos$Phylum_Categoria)
+```
+
+
+```{r}
+tax_table(data) <- as.matrix(phylum_grupos)
+phy_grouped <- tax_glom(data, taxrank = "Phylum_Categoria")
+```
+
+```{r}
+rel_phylum_global <- tax_glom(phy_grouped, taxrank = 'Phylum_Categoria')
+rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
+rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
+#str(rel_phyl_global_df)
+#rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5% abund"
+rel_phyl_global_df$Phylum_Categoria <- as.factor(rel_phyl_global_df$Phylum_Categoria)
+```
+
+
+```{r, echo=FALSE}
+# Define your custom color palette
+phylum_colors_rel <- c(
+  "Chordata" = "#1f78b4",  
+  "Fungi" = "#287E36", 
+  "Others" = "#11111fff"
+)
+
+colores_categorias <- c(
+  "Animal" = "#E69F00",
+  "Plantae" = "#009E73",
+  "Algae" = "#56B4E9",
+  "Fungi" = "#D55E00",
+  "Protists" = "#CC79A7"
+)
+
+relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum_Categoria))+ 
+  geom_bar(aes(), stat="identity", position="stack")+
+  scale_fill_manual(values = colores_categorias)+
+  labs(x= "Samples", y = "Relative abundance") +
+  theme( legend.text = element_text(size = 16, face = "italic"), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16),
+         legend.position = "bottom")
+
+
+relative_plot_phylum
+```
+
+
+```{r}
+data <- subset_taxa(all_data, Kingdom == "Eukaryota")
+phylums <- tax_glom(data, taxrank = 'Phylum')
+#phylums <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
+phylums_df<-psmelt(phylums) # convert to data frame
+unique(phylums_df$Phylum)
+```
 
 # Statistics
 
