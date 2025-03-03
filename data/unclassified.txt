@@ -1,0 +1,50 @@
+==> 21_Melli.report <==
+ 73.19	23702145	23702145	U	0	unclassified
+
+==> 22_Melli.report <==
+ 72.75	27535782	27535782	U	0	unclassified
+
+==> 23_Scapto.report <==
+ 64.95	22398546	22398546	U	0	unclassified
+
+==> 39_Melli.report <==
+ 72.04	27435675	27435675	U	0	unclassified
+
+==> 40_Melli.report <==
+ 69.87	25167814	25167814	U	0	unclassified
+
+==> 41_Melli.report <==
+ 68.66	22258902	22258902	U	0	unclassified
+
+==> 42_Melli.report <==
+ 71.84	24513015	24513015	U	0	unclassified
+
+==> 43_Scapto.report <==
+ 60.43	22421787	22421787	U	0	unclassified
+
+==> 45_Melli.report <==
+ 74.78	26131601	26131601	U	0	unclassified
+
+==> 46_Melli.report <==
+ 73.09	24309336	24309336	U	0	unclassified
+
+==> 47_Melli.report <==
+ 72.88	24776085	24776085	U	0	unclassified
+
+==> 51_Scapto.report <==
+ 65.54	24854345	24854345	U	0	unclassified
+
+==> 89_Scapto.report <==
+ 64.28	22446120	22446120	U	0	unclassified
+
+==> 90_Scapto.report <==
+ 66.58	24137697	24137697	U	0	unclassified
+
+==> 91_Scapto.report <==
+ 67.51	24931766	24931766	U	0	unclassified
+
+==> 92_Scapto.report <==
+ 63.63	24112168	24112168	U	0	unclassified
+
+==> 93_Scapto.report <==
+ 67.74	21880205	21880205	U	0	unclassified
