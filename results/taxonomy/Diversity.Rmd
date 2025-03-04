@@ -38,6 +38,7 @@ colnames(raw_metagenomes@tax_table@.Data)<- c("Kingdom", "Phylum", "Class", "Ord
 ```
 
 
+
 ```{r, include=FALSE, message=FALSE, warning=FALSE}
 # upload the metadata
 df_meta <- read_csv("D:/Users/hayde/Documents/R_sites/honey_diversity/data/metadata_miel.csv")
@@ -144,7 +145,7 @@ We will work with the `Bacteria` subset.
 # Kigdoms
 
 ```{r}
-kingdoms <- tax_glom(raw_metagenomes_all, taxrank = 'Kingdom')
+kingdoms <- tax_glom(all_data, taxrank = 'Kingdom')
 
 # Convertir a data.frame para visualización y análisis
 kingdoms_df <- psmelt(kingdoms)
@@ -274,7 +275,7 @@ phylum_colors_rel <- c(
   "Archaea" = "red"
 )
 
-rel_phyl_global_df$Kingdom <- factor(rel_phyl_global_df$Kingdom, levels = c("Bacteria", "Viruses", "Eukaryota", "Archaea"))
+rel_phyl_global_df$Kingdom <- factor(rel_phyl_global_df$Kingdom, levels = c("Archaea", "Bacteria", "Eukaryota", "Viruses"))
 
 relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Kingdom))+ 
   geom_bar(aes(), stat="identity", position="stack")+
@@ -298,7 +299,7 @@ relative_plot_phylum
 
 
 ```{r, eval=FALSE, include=FALSE}
-ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_kingdom.svg", plot = relative_plot_phylum, width = 8, height = 7, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_kingdom2.svg", plot = relative_plot_phylum, width = 8, height = 7, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum.svg", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
 ```
 
@@ -1086,7 +1087,7 @@ relative_plot_phylum
 ```
 
 ```{r, eval=FALSE, include=FALSE}
-ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota.svg", plot = relative_plot_phylum, width = 10, height = 5, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota.svg", plot = relative_plot_phylum, width = 7, height = 5, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota.png", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
 ```
 
@@ -1185,7 +1186,7 @@ unique(rel_Gen)
 ```
 
 
-```{r}
+```{r, eval=FALSE}
 
 #homo <- c("Chordata")
 #hongos <- c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")
@@ -1218,7 +1219,7 @@ eukaryas <- as.data.frame(tax_table(data))
 # Definir los grupos de Phylum
 phylum_grupos <- eukaryas %>%
   mutate(Phylum_Categoria = case_when(
-    Phylum %in% c("Chordata") ~ "Animal",
+    Phylum %in% c("Chordata") ~ "Chordata",
     Phylum %in% c("Streptophyta","Chlorophyta") ~ "Plantae",
     Phylum %in% c("Rhodophyta", "Bacillariophyta") ~ "Algae",
     Phylum %in% c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia") ~ "Fungi",
@@ -1242,6 +1243,8 @@ rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 #str(rel_phyl_global_df)
 #rel_phyl_global_df$Phylum[rel_phyl_global_df$Abundance < 5] <- "Phyla < 5% abund"
 rel_phyl_global_df$Phylum_Categoria <- as.factor(rel_phyl_global_df$Phylum_Categoria)
+
+rel_phyl_global_df$Phylum_Categoria <- factor(rel_phyl_global_df$Phylum_Categoria, levels = c("Algae", "Protists", "Fungi", "Chordata", "Plantae"))
 ```
 
 
@@ -1254,11 +1257,11 @@ phylum_colors_rel <- c(
 )
 
 colores_categorias <- c(
-  "Animal" = "#E69F00",
-  "Plantae" = "#009E73",
-  "Algae" = "#56B4E9",
-  "Fungi" = "#D55E00",
-  "Protists" = "#CC79A7"
+  "Chordata" = "#8F7EE5",
+  "Plantae" = "#85B22C",
+  "Algae" = "#D82632",
+  "Fungi" = "#662F00",
+  "Protists" = "#FFB6DB"
 )
 
 relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum_Categoria))+ 
@@ -1280,6 +1283,10 @@ relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundanc
 relative_plot_phylum
 ```
 
+```{r, eval=FALSE, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_eukaryota.svg", plot = relative_plot_phylum, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_genus_eukaryota.png", plot = relative_plot_g, width = 8, height = 7, dpi = 300)
+```
 
 ```{r}
 data <- subset_taxa(all_data, Kingdom == "Eukaryota")
