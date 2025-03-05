@@ -1,0 +1,1099 @@
+---
+title: "Statistics_analysis"
+author: "Haydeé"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggcorrplot)
+library(corrplot)
+library(readr)
+library(ggplot2)
+library(kableExtra)
+library(multcompView)
+library(FSA)
+library(car)
+```
+
+
+```{r}
+base <- read_csv("D:/Users/hayde/Documents/R_sites/honey_diversity/data/metadata_miel.csv")
+base_df_num <- data.frame(base$ID, base$Moisture, base$HMF,
+                          base$Colorimetry, base$pH, base$Conductivity, base$Ash, 
+                          base$Total_sugar)
+
+colnames(base_df_num) <- c("ID", "Moisture", "HMF", "Colorimetry", 
+                           "pH", "Conductivity", "Ash", "Total_sugar")
+```
+
+```{r}
+summary(base_df_num)
+str(base_df_num)
+```
+
+
+```{r}
+res1 <- cor.mtest(data.matrix(base_df_num[,-1]), conf.level= .95)
+res2 <- cor.mtest(base_df_num[,-1], conf.level= .95)
+
+pvalores <-res1$p
+lowint <- res1$lowCI
+upint <- res1$uppCI
+```
+
+
+
+Los p-valores obtenidos son los siguientes
+
+```{r, echo=FALSE}
+kable(pvalores, booktabs=T, caption="p-value")%>%
+  kable_styling(position = "center",
+                latex_options = c("hold_position", "striped"))
+
+```
+
+
+Los intervalos inferiores y superiores están en las siguientes tablas.
+
+```{r, echo=FALSE}
+kable(lowint, booktabs=T, caption="Low interval")%>%
+  kable_styling(position = "center",
+                latex_options = c("hold_position", "striped"))
+```
+
+
+```{r, echo=FALSE}
+kable(upint, booktabs=T, caption="Upper interval")%>%
+  kable_styling(position = "center",
+                latex_options = c("hold_position", "striped"))
+```
+
+
+Se realizo también un `cor.test` usando el método de Pearson y un nivel de significancia de `0.05`. Los resultados son los siguientes:
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$HMF, method="pearson",conf.level=0.05)
+```
+
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$Colorimetry, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$pH, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$Conductivity, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$Ash, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Moisture, base_df_num$Total_sugar, method="pearson",conf.level=0.05)
+```
+```{r, echo=FALSE}
+cor.test(base_df_num$Colorimetry, base_df_num$HMF, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Colorimetry, base_df_num$pH, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Colorimetry, base_df_num$Conductivity, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Colorimetry, base_df_num$Ash, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Colorimetry, base_df_num$Total_sugar, method="pearson",conf.level=0.05)
+```
+```{r, echo=FALSE}
+cor.test(base_df_num$pH, base_df_num$HMF, method="pearson",conf.level=0.05)
+```
+
+
+```{r, echo=FALSE}
+cor.test(base_df_num$pH, base_df_num$Conductivity, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$pH, base_df_num$Ash, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$pH, base_df_num$Total_sugar, method="pearson",conf.level=0.05)
+```
+```{r, echo=FALSE}
+cor.test(base_df_num$Conductivity, base_df_num$HMF, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Conductivity, base_df_num$Ash, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Conductivity, base_df_num$Total_sugar, method="pearson",conf.level=0.05)
+```
+```{r, echo=FALSE}
+cor.test(base_df_num$Ash, base_df_num$HMF, method="pearson",conf.level=0.05)
+```
+
+```{r, echo=FALSE}
+cor.test(base_df_num$Ash, base_df_num$Total_sugar, method="pearson",conf.level=0.05)
+```
+
+
+```{r, echo=FALSE}
+cor.mat_all <- cor(data.matrix(base_df_num[,-1]), use="complete.obs")
+
+corplot_all <- corrplot(cor.mat_all, method="circle", tl.col = "black", tl.srt = 45, sig.level = 0.05, number.cex = 0.9, addCoef.col = "black",order = "AOE",type = "upper",addshade = "all", diag = F)
+
+```
+
+
+
+
+# Analysis by variable
+
+```{r, include=FALSE}
+base2 <- base
+State <- as.factor(base2$State)
+City <- as.factor(base2$City)
+Locality <- as.factor(base2$Locality)
+Region <-  as.factor(base2$Region)
+Specie <- as.factor(base2$Specie)
+Zootechnic_mangement <- as.factor(base2$Zootechnic_mangement)
+Flowering_type <- as.factor(base2$Flowering_type)
+
+base2$State <- as.factor(base2$State)
+base2$City <- as.factor(base2$City)
+base2$Locality <- as.factor(base2$Locality)
+base2$Region <-  as.factor(base2$Region)
+base2$Specie <- as.factor(base2$Specie)
+base2$Zootechnic_mangement <- as.factor(base2$Zootechnic_mangement)
+base2$Flowering_type <- as.factor(base2$Flowering_type)
+```
+
+## Moisture
+
+
+```{r}
+moisture <- ggplot(data = base2, mapping = aes(x =Specie, y = Moisture, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+moisture 
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$Moisture)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de Moisture parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de Moisture NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$Moisture, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+**Nota: Interpretación del valor p de la prueba de Shapiro-Wilk**
+
+- Hipótesis nula ($H_0$): Los datos provienen de una distribución normal.
+
+- Hipótesis alternativa ($H_1$): Los datos no provienen de una distribución normal.
+
+El resultado que arroja `shapiro.test()` incluye un p-valor:
+
+- Si el valor p es mayor que el nivel de significancia (comúnmente 0.05), no se rechaza la hipótesis nula, lo que sugiere que los datos siguen una distribución normal.
+
+- Si el valor p es menor o igual al nivel de significancia (por ejemplo, 0.05), se rechaza la hipótesis nula, indicando que los datos no siguen una distribución normal.
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$Moisture ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+
+```
+```{r}
+bartlett_test <- bartlett.test(base2$Moisture ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$Moisture~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+Aplicamos el test de Kruskal-Wallis.
+
+**Interpretación:**
+
+La prueba de Kruskal-Wallis evalúa si hay diferencias significativas entre las medianas de dos o más grupos.
+El valor p que se obtiene indica si hay evidencia suficiente para rechazar la hipótesis nula, que supone que las distribuciones de los grupos son idénticas.
+
+**Criterio de decisión:**
+
+- Si el valor p es menor que el nivel de significancia (por ejemplo, 0.05), entonces hay una diferencia significativa entre al menos dos de los grupos.
+
+- Si el valor p es mayor que el nivel de significancia, entonces no hay diferencias significativas y puedes detener el análisis post-hoc, ya que no se encontraron diferencias importantes.
+
+```{r}
+kruskal_results <- kruskal.test(base2$Moisture ~ base2$Specie, data = base2)
+print(kruskal_results)
+
+if (kruskal_results$p.value < 0.05) {
+  cat("La prueba de Kruskal-Wallis es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("Hay diferencias significativas entre los grupos. Proceder con un análisis post-hoc.\n")
+} else {
+  cat("La prueba de Kruskal-Wallis NO es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("No se encontraron diferencias significativas entre los grupos.\n")
+}
+
+```
+
+```{r}
+dunn_resultado <- dunnTest(base2$Moisture ~ base2$Specie, method = "bonferroni")
+print(dunn_resultado)
+```
+
+```{r}
+if (any(dunn_resultado$res$P.adj < 0.05)) {
+  cat("Hay diferencias significativas entre algunos grupos.\n")
+} else {
+  cat("No hay diferencias significativas entre los grupos.\n")
+}
+```
+
+**Interpretación del resultado:**
+
+El resultado de `dunnTest()` mostrará comparaciones entre cada par de grupos, junto con sus valores p ajustados. Si el valor p ajustado es menor que el nivel de significancia (en este caso, 0.05), entonces hay diferencias significativas entre esos dos grupos específicos.
+
+Otro análisis que se puede realizar es realizar comparaciones pareadas utilizando la prueba de Wilcoxon de rango con signo (o prueba de Mann-Whitney para muestras independientes).
+
+
+```{r}
+pairwise_resultado <- pairwise.wilcox.test(x = base2$Moisture, g = base2$Specie, p.adjust.method = "holm" )
+print(pairwise_resultado)
+```
+
+**NOTA: Diferencias clave entre pairwise.wilcox.test() y dunnTest()**
+
+**a. Naturaleza de la Prueba**
+
+- pairwise.wilcox.test() realiza múltiples pruebas de Wilcoxon para cada par de grupos, de manera similar a cómo se harían comparaciones t para datos paramétricos. Es útil para comparar cada par de grupos en un análisis post-hoc.
+- dunnTest() realiza una prueba de Dunn para comparar todos los pares de grupos, basada en rangos ajustados después de un Kruskal-Wallis significativo. Es específicamente diseñado como un post-hoc para Kruskal-Wallis.
+
+**b. Uso y Ajuste de Valores p**
+
+- pairwise.wilcox.test() ajusta los valores p usando un método de corrección para pruebas múltiples, como Bonferroni, Holm, o Benjamini-Hochberg. Este ajuste es necesario porque realizar múltiples comparaciones aumenta el riesgo de falsos positivos.
+- dunnTest() también ajusta los valores p para múltiples comparaciones, pero está más orientado al contexto específico de un análisis post-hoc de Kruskal-Wallis.
+
+**c. Interpretación**
+Los resultados de ambas pruebas son similares en términos de salida, ya que muestran pares de grupos comparados y sus valores p ajustados.
+Sin embargo, dunnTest() se considera una extensión más formal y directa del procedimiento de Kruskal-Wallis, mientras que pairwise.wilcox.test() puede ser más general.
+
+**d. Comparaciones Emparejadas vs. Comparaciones Globales**
+
+- pairwise.wilcox.test() realiza pruebas independientes para cada par y ajusta los valores p en función del número de comparaciones.
+
+- dunnTest() realiza ajustes considerando el contexto global del Kruskal-Wallis y tiene en cuenta todos los pares simultáneamente.
+
+
+## HMF
+
+```{r}
+HMF <- ggplot(data = base2, mapping = aes(x =Specie, y = HMF, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+HMF
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$HMF)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de HMF parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de HMF NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$HMF, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$HMF ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$HMF ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$HMF~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+Aplicamos el test de Kruskal-Wallis.
+
+```{r}
+kruskal_results <- kruskal.test(base2$HMF ~ base2$Specie, data = base2)
+print(kruskal_results)
+
+if (kruskal_results$p.value < 0.05) {
+  cat("La prueba de Kruskal-Wallis es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("Hay diferencias significativas entre los grupos. Proceder con un análisis post-hoc.\n")
+} else {
+  cat("La prueba de Kruskal-Wallis NO es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("No se encontraron diferencias significativas entre los grupos.\n")
+}
+
+```
+
+```{r, include=FALSE, eval=FALSE}
+dunn_resultado <- dunnTest(base2$Moisture ~ base2$Specie, method = "bonferroni")
+print(dunn_resultado)
+```
+
+```{r, include=FALSE, eval=FALSE}
+if (any(dunn_resultado$res$P.adj < 0.05)) {
+  cat("Hay diferencias significativas entre algunos grupos.\n")
+} else {
+  cat("No hay diferencias significativas entre los grupos.\n")
+}
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+pairwise_resultado <- pairwise.wilcox.test(x = base2$Moisture, g = base2$Specie, p.adjust.method = "holm" )
+print(pairwise_resultado)
+```
+
+
+## Colorimetry
+
+```{r}
+colorimetry <- ggplot(data = base2, mapping = aes(x =Specie, y = Colorimetry, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+colorimetry
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$Colorimetry)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de Colorimetry parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de Colorimetry NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$Colorimetry, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$Colorimetry ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$Colorimetry ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$Colorimetry~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+Aplicamos el test de Kruskal-Wallis.
+
+```{r}
+kruskal_results <- kruskal.test(base2$Colorimetry ~ base2$Specie, data = base2)
+print(kruskal_results)
+
+if (kruskal_results$p.value < 0.05) {
+  cat("La prueba de Kruskal-Wallis es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("Hay diferencias significativas entre los grupos. Proceder con un análisis post-hoc.\n")
+} else {
+  cat("La prueba de Kruskal-Wallis NO es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("No se encontraron diferencias significativas entre los grupos.\n")
+}
+
+```
+
+```{r, include=FALSE, eval=FALSE}
+dunn_resultado <- dunnTest(base2$Moisture ~ base2$Specie, method = "bonferroni")
+print(dunn_resultado)
+```
+
+```{r, include=FALSE, eval=FALSE}
+if (any(dunn_resultado$res$P.adj < 0.05)) {
+  cat("Hay diferencias significativas entre algunos grupos.\n")
+} else {
+  cat("No hay diferencias significativas entre los grupos.\n")
+}
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+pairwise_resultado <- pairwise.wilcox.test(x = base2$Moisture, g = base2$Specie, p.adjust.method = "holm" )
+print(pairwise_resultado)
+```
+
+## pH
+
+```{r}
+pH <- ggplot(data = base2, mapping = aes(x =Specie, y = pH, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+pH
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$pH)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de pH parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de pH NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$pH, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$pH ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$pH ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas NO son homogeneas. Hay contrariedad en los métodos.
+
+
+```{r}
+modelo <- lm(base2$pH~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+Aplicamos el test de Kruskal-Wallis.
+
+```{r}
+kruskal_results <- kruskal.test(base2$pH ~ base2$Specie, data = base2)
+print(kruskal_results)
+
+if (kruskal_results$p.value < 0.05) {
+  cat("La prueba de Kruskal-Wallis es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("Hay diferencias significativas entre los grupos. Proceder con un análisis post-hoc.\n")
+} else {
+  cat("La prueba de Kruskal-Wallis NO es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("No se encontraron diferencias significativas entre los grupos.\n")
+}
+
+```
+
+```{r}
+dunn_resultado <- dunnTest(base2$pH ~ base2$Specie, method = "bonferroni")
+print(dunn_resultado)
+```
+
+```{r}
+if (any(dunn_resultado$res$P.adj < 0.05)) {
+  cat("Hay diferencias significativas entre algunos grupos.\n")
+} else {
+  cat("No hay diferencias significativas entre los grupos.\n")
+}
+```
+
+
+```{r}
+pairwise_resultado <- pairwise.wilcox.test(x = base2$pH, g = base2$Specie, p.adjust.method = "holm" )
+print(pairwise_resultado)
+```
+
+
+## Conductivity
+
+
+```{r}
+conductivity <- ggplot(data = base2, mapping = aes(x =Specie, y = Conductivity, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+conductivity
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$Conductivity)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de Conductivity parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de Conductivity NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$Conductivity, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$Conductivity ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$Conductivity ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$Conductivity~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+```{r}
+# Realizar el ANOVA
+resultado_anova <- aov(base2$Conductivity ~ base2$Specie, data = base2)
+# Resumen de los resultados
+summary_resultado <- summary(resultado_anova)
+
+# Extraer el valor p
+p_value_anova <- summary_resultado[[1]][["Pr(>F)"]][1]
+
+# Verificar si es significativo
+if (p_value_anova < 0.05) {
+  cat("El ANOVA es significativo (p =", p_value_anova, ").\n")
+} else {
+  cat("El ANOVA no es significativo (p =", p_value_anova, ").\n")
+}
+
+```
+
+
+## Ash
+
+```{r}
+ash <- ggplot(data = base2, mapping = aes(x =Specie, y = Ash, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+ash
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$Ash)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de Ash parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de Ash NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$Ash, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$Ash ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$Ash ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$Ash~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+```{r}
+# Realizar el ANOVA
+resultado_anova <- aov(base2$Ash ~ base2$Specie, data = base2)
+# Resumen de los resultados
+summary_resultado <- summary(resultado_anova)
+
+# Extraer el valor p
+p_value_anova <- summary_resultado[[1]][["Pr(>F)"]][1]
+
+# Verificar si es significativo
+if (p_value_anova < 0.05) {
+  cat("El ANOVA es significativo (p =", p_value_anova, ").\n")
+} else {
+  cat("El ANOVA no es significativo (p =", p_value_anova, ").\n")
+}
+
+```
+## Total Sugar
+
+```{r}
+total_sugar <- ggplot(data = base2, mapping = aes(x =Specie, y = Total_sugar, fill = Specie)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("#b8860b", "#FFBF00"))+
+  theme_bw() +
+  theme(legend.position = "none")+
+  theme(legend.text = element_text(size = 16), axis.title = element_text(size = 16), axis.text.x = element_text(size = 14, face="italic"),axis.text.y = element_text(size = 16), plot.title = element_text(size = 20), axis.title.x = element_text(size = 16, face = "bold"), 
+    axis.title.y = element_text(size = 16, face = "bold"), legend.title = element_text(size = 16))
+
+total_sugar
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.png", plot = moisture, width = 8, height = 5, dpi = 300)
+#ggsave(filename = "~/miel/Statistics_analysis/figures/boxplot_moisture.svg", plot = moisture, width = 8, height = 5, dpi = 300)
+```
+
+
+```{r}
+result <- shapiro.test(base_df_num$Total_sugar)
+
+# Interpretación
+if (result$p.value > 0.05) {
+  cat("Los datos de Total_sugar parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos de Total_sugar NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+```
+
+
+```{r}
+ggplot(data = base2, mapping = aes(x = base2$Total_sugar, colour = base2$Specie)) +
+  geom_histogram(aes(y = ..density..)) +
+  geom_density(lwd = 1.2,
+               linetype = 2,
+               colour = 2)+
+  theme_bw() +
+  facet_grid(. ~ base2$Specie) +
+  theme(legend.position = "none")
+```
+
+
+Revisar supuesto de homogeneidad de varianzas.
+
+```{r}
+
+# Prueba de Levene
+levene_resultado <- leveneTest(base2$Total_sugar ~ base2$Specie, data = base2)
+print(levene_resultado)
+
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+```
+
+
+```{r}
+bartlett_test <- bartlett.test(base2$Total_sugar ~ base2$Specie)
+
+print(bartlett_test)
+
+# Interpretación
+if (bartlett_test$p.value > 0.05) {
+  cat("Las varianzas son homogéneas (p =", bartlett_test$p.value, ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", bartlett_test$p.value, ").\n")
+}
+```
+
+Nos indica que a un nivel de significancia de 0.05 las varianzas son homogeneas.
+
+
+```{r}
+modelo <- lm(base2$Total_sugar~base2$Specie, base2)
+par(mfrow = c(2,2))
+plot(modelo)
+```
+
+
+```{r}
+# Realizar el ANOVA
+resultado_anova <- aov(base2$Total_sugar ~ base2$Specie, data = base2)
+# Resumen de los resultados
+summary_resultado <- summary(resultado_anova)
+
+# Extraer el valor p
+p_value_anova <- summary_resultado[[1]][["Pr(>F)"]][1]
+
+# Verificar si es significativo
+if (p_value_anova < 0.05) {
+  cat("El ANOVA es significativo (p =", p_value_anova, ").\n")
+} else {
+  cat("El ANOVA no es significativo (p =", p_value_anova, ").\n")
+}
+
+```
+```{r}
+# Prueba de Tukey para comparaciones múltiples
+tukey_resultados <- TukeyHSD(resultado_anova)
+print(tukey_resultados)
+```
+
+```{r}
+# Convertir los resultados de Tukey en un formato legible
+tukey_tabla <- tukey_resultados$`base2$Specie`
+diferencias_sig <- multcompLetters4(resultado_anova, tukey_resultados)
+
+# Muestra las letras asignadas
+print(diferencias_sig)
+
+```
+
+
+```{r}
+resumen <- base2 %>%
+  group_by(Specie) %>%
+  summarise(
+    media = mean(Total_sugar, na.rm = TRUE),
+    sd = sd(Total_sugar, na.rm = TRUE)
+  )
+
+# Agregar las letras de significancia
+resumen$letras <- diferencias_sig$Letters
+print(resumen)
+
+```
+
+
+# Resumen
+
+Las variables que siguen una distribución normal son:
+
+- Conductividad
+
+- Azucar total
+
+- Ash
+
+
+Las variables que no siguen una distribución no normal:
+
+- Moisture
+
+- HMF
+
+- Colorimetry
+
+- pH
+
+
+Para las que siguen una distribución normal se realizó un ANOVA y si el resultado era significativo entre las especies se procedió a una análisis posterior usando Tukey multiple comparisons of means.
+
+Para las muestras que no siguen una distribución normal se realizo un K-W y dependiendo de su significancia se procedió a un análisis posterior con el test de dunn y el pairwise.
+
+
+
+**NOTA**: Se debe considerar que en este caso solo hay dos grupos y por lo tanto no es necesario hacer tal cual este análisis, se podría simplificar revisando solo:
+
+- Normalidad y homogeneidad
+
+- Prueba t o t de Welch para datos normales 
+
+- Prueba Wilcoxon de rango con signo para no normales.
+
+Si se quiere analizar con respecto a otra variable que no sea *Especie*, entonces se puede replicar este análisis cambiando la variable *Specie* por la que sea de interés, por ejemplo *Locality*.
+
+
+# Estadísticos básicos por especie
+
+```{r}
+estadisticos <- base2 %>%
+  group_by(Specie) %>%
+  summarise(
+    promedio_moisture = mean(Moisture, na.rm = TRUE),
+    sd_moisture = sd(Moisture, na.rm=TRUE),
+    promedio_HMF = mean(HMF, na.rm = TRUE),
+    sd_HMF = sd(HMF, na.rm = TRUE),
+    promedio_colorimetry = mean(Colorimetry, na.rm = TRUE),
+    sd_colorimetry = sd(Colorimetry, na.rm=TRUE),
+    promedio_PH = mean(pH, na.rm = TRUE),
+    sd_PH = sd(pH, na.rm = TRUE),
+    promedio_conductivity = mean(Conductivity, na.rm = TRUE),
+    sd_conductivity = sd(Conductivity, na.rm=TRUE),
+    promedio_ash = mean(Ash, na.rm = TRUE),
+    sd_Ash = sd(Ash, na.rm = TRUE),
+    promedio_sugar = mean(Total_sugar, na.rm = TRUE),
+    sd_sugar = sd(Total_sugar, na.rm=TRUE)
+  )
+
+estadisticos
+```
+
