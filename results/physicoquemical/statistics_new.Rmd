@@ -1097,3 +1097,26 @@ estadisticos <- base2 %>%
 estadisticos
 ```
 
+```{r}
+rangos <- base2 %>%
+  group_by(Specie)%>%
+  summarise(
+    min_moisture = min(Moisture), 
+    max_moisture = max(Moisture),
+    min_HMF = min(HMF), 
+    max_HMF = max(HMF),
+    min_colorimetry = min(Colorimetry), 
+    max_colorimetry = max(Colorimetry),
+    min_pH = min(pH), 
+    max_pH = max(pH),
+    min_conductivity = min(Conductivity), 
+    max_conductivity = max(Conductivity),
+    min_Ash = min(Ash), 
+    max_Ash = max(Ash),
+    min_Totalsugar = min(Total_sugar), 
+    max_Totalsugar = max(Total_sugar))
+
+rangos
+
+#write.csv(rangos, "D:/Users/hayde/Documents/R_sites/honey_diversity/results/physicoquemical/rangos.csv", row.names = FALSE)
+```

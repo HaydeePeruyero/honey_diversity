@@ -22,6 +22,12 @@ library("grid")
 library("gridExtra")
 library("paletteer")
 library("forcats")
+library(plyr)
+library(reshape2)
+library(vegan)
+library(car) # for levenetest
+library(multcompView)
+library(FSA) # duntest
 ```
 
 First, we need to read the biom files. In this file, we found the following **Kingdoms**.
@@ -413,7 +419,154 @@ alpha_plot
 ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/alpha_div_plot_chao.svg", plot = alpha_plot, width = 7, height = 5, dpi = 300)
 ```
 
+```{r}
+obj.phylo <- c("data")
+measures <- c("Observed", "Chao1", "Shannon")
+sta.results <- data.frame(Obj.Phyloseq = character(),
+                          Measure = character(),
+                          Melli = character(),
+                          Scapto = character(),
+                          p_value = numeric(), 
+                          adjust_method = character())
+sta.results.tukey <- data.frame(Obj.Phyloseq = character(),
+                                Measure = character(),
+                                Versus = character(),
+                                p_value = numeric())
+for (o.p in obj.phylo){
+  tryCatch({
+    # o.p <- "Genus_R"
+    ob.phy <- get(o.p)
+    abund_table <- t(ob.phy@otu_table@.Data)
+    SAM <- ob.phy@sam_data
+    SAM$ID <- rownames(SAM)
+    ## Observed
+    Obs <- estimateR(abund_table)[1,]
+    ObsDF <- data.frame(ID = names(Obs), Observed = Obs)
+    ## Chao1
+    Chao <- estimateR(abund_table)[2,]
+    ChaoDF <- data.frame(ID = names(Chao), Chao1 = Chao)
+    ## Shannon
+    Shannon <- vegan::diversity(abund_table, "shannon")
+    ShannonDF <- data.frame(ID = names(Shannon), Shannon = Shannon)
+    Diversity <- inner_join(ObsDF, ChaoDF, by = "ID") %>% 
+      inner_join(., ShannonDF, by = "ID") %>% 
+      inner_join(., SAM, by = "ID")
+    Diversity2 <- Diversity %>% 
+      select(Specie, Observed, Chao1, Shannon) %>%
+      gather("Index", "Value", -Specie)
+    # Mean Diversity 
+    MeanDiversity <- ddply(Diversity, "Specie", summarise, 
+                           MeanObserved = mean(Observed), 
+                           MeanChao1 = mean(Chao1),
+                           MeanShannon = mean(Shannon)
+                           #MeanSimpson = mean(Simpson)
+                           )
+    MeanLines <- ddply(Diversity2, c("Specie", "Index"), summarise, 
+                   MeanValue = mean(Value))
+    for (idx in measures){
+        result <- shapiro.test(Diversity[[idx]])
+  print(idx)
+    # Interpretación
+    if (result$p.value > 0.05) {
+    cat("Los datos parecen seguir una distribución normal (p =", result$p.value, ").\n")
+} else {
+  cat("Los datos NO parecen seguir una distribución normal (p =", result$p.value, ").\n")
+}
+    }
+    for (idx in measures){
+      levene_resultado <- leveneTest(Diversity[[idx]] ~ Diversity$Specie, data = Diversity)
+      print(idx)
+      print(levene_resultado)
 
+# Interpretación
+if (levene_resultado$`Pr(>F)`[1] > 0.05) {
+  cat("Las varianzas son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+} else {
+  cat("Las varianzas NO son homogéneas (p =", levene_resultado$`Pr(>F)`[1], ").\n")
+}
+    }
+    for (idx in measures){
+      # Fitting linear models
+      fit <- lm(formula = Diversity[[idx]] ~ Diversity[["Specie"]], data = Diversity)
+      # ANOVA
+      ANOVA <- anova(fit)
+      ANOVA
+      # Intercepto
+      aov_fit <- aov(formula = Diversity[[idx]] ~ Diversity[["Specie"]], data = Diversity)
+      summary(aov_fit, intercept = T)
+      # pairwise.t.test - no adjust
+      t.test.NA <- pairwise.t.test(Diversity[[idx]], Diversity$Specie, 
+                                   p.adjust = "none", pool.sd = T)
+      t.test.NA.melt <- melt(t.test.NA$p.value, na.rm = TRUE)
+      colnames(t.test.NA.melt) <- c("Scapto", "Melli", "p_value")
+      sta.results <- bind_rows(sta.results, 
+                               data.frame(Obj.Phyloseq = o.p,
+                                          Measure = idx, 
+                                          Melli = t.test.NA.melt$Melli,
+                                          Scapto = t.test.NA.melt$Scapto,
+                                          p_value = t.test.NA.melt$p_value,
+                                          adjust_method = "None"))
+      # pairwise.t.test - Bonferroni adjust
+      t.test.Bon <- pairwise.t.test(Diversity[[idx]], Diversity$Specie, 
+                                    p.adjust = "bonferroni", pool.sd = T)
+      t.test.Bon.melt <- melt(t.test.Bon$p.value, na.rm = TRUE)
+      colnames(t.test.Bon.melt) <- c("Scapto", "Melli", "p_value")
+      sta.results <- bind_rows(sta.results, 
+                               data.frame(Obj.Phyloseq = o.p,
+                                          Measure = idx, 
+                                          Melli = t.test.Bon.melt$Melli,
+                                          Scapto = t.test.Bon.melt$Scapto,
+                                          p_value = t.test.Bon.melt$p_value,
+                                          adjust_method = "Bonferroni"))
+      ## t-test welch
+      t.test(Diversity[[idx]] ~ Specie, data = Diversity, var.equal = FALSE)
+      
+      # Tukey
+      tukey <- TukeyHSD(aov_fit, conf.level = 0.95)
+      sta.results.tukey <- bind_rows(sta.results.tukey, 
+                                     data.frame(Obj.Phyloseq = o.p,
+                                                Measure = idx,                                          Versus=c("Scaptotrigona mexicana vs Melipona beecheii"),
+                    p_value = tukey$`Diversity[["Specie"]]`[,4]))
+    }
+  }, error = function(e){cat("ERROR :",conditionMessage(e),"\n")})
+}
+
+for (idx in measures){
+  print(idx)
+  kruskal_results <- kruskal.test(Diversity[[idx]] ~ Specie, data = Diversity)
+print(kruskal_results)
+
+if (kruskal_results$p.value < 0.05) {
+  cat("La prueba de Kruskal-Wallis es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("Hay diferencias significativas entre los grupos. Proceder con un análisis post-hoc.\n")
+} else {
+  cat("La prueba de Kruskal-Wallis NO es significativa (p =", kruskal_results$p.value, ").\n")
+  cat("No se encontraron diferencias significativas entre los grupos.\n")
+
+
+  
+  }
+  
+}
+
+for (idx in measures){
+  dunn_resultado <- dunnTest(Diversity[[idx]] ~ Diversity$Specie, method = "bonferroni")
+print(dunn_resultado)
+if (any(dunn_resultado$res$P.adj < 0.05)) {
+  cat("Hay diferencias significativas entre algunos grupos.\n")
+} else {
+  cat("No hay diferencias significativas entre los grupos.\n")
+}
+}
+
+# Significative results
+sta.results$Versus <- paste(sta.results$Melli, sta.results$Scapto, sep = "vs")
+signif.results <- sta.results %>% 
+  filter(p_value < 0.05) %>% 
+  filter(adjust_method == "Bonferroni")
+signif.results.tukey <- sta.results.tukey %>% 
+  filter(p_value < 0.05)
+```
 
 ```{r, include=FALSE, echo=FALSE}
 #summary(data@tax_table@.Data== "")
@@ -533,6 +686,43 @@ beta_div_plot
 
 ggsave(filename = "D:/Users/hayde/Documents/miel/miel/Metagenomics/figures/figs/beta_div_plot_zoot.svg", plot = beta_div_plot, width = 8, height = 6, dpi = 300)
 ```
+
+```{r}
+# Dataframe
+permanovaDF <- data.frame(Obj.Phyloseq = character(),
+                          Distance = character(),
+                          F_value = numeric(),
+                          p_value = numeric(),
+                          Versus = character(),
+                          p_value_pairs = numeric())
+
+for (o.p in obj.phylo){
+  # o.p <- "Genus_RR"
+  ob.phy <- get(o.p)
+  #Wunifrac <- UniFrac(physeq = ob.phy, weighted = TRUE, normalized = TRUE, 
+  #                    parallel = TRUE, fast = TRUE)
+  bc_dist <- distance(data, method = "bray")
+  permanova <- adonis2(bc_dist ~ sample_data(ob.phy)$Specie)
+  permanova.pair <- pairwise.adonis(bc_dist, sample_data(ob.phy)$Specie)
+  permanovaDF <- bind_rows(permanovaDF, 
+                           data.frame(Obj.Phyloseq = rep(o.p, 3),
+                                      Distance = rep("Weighted UniFrac", 3),
+                                      F_value = rep(permanova$F[1], 3),
+                                      p_value = rep(permanova$`Pr(>F)`[1], 3),
+                                      Versus = permanova.pair$pairs,
+                                      p_value_pairs = permanova.pair$p.value))
+}
+signif.permanova <- permanovaDF %>% 
+  filter(p_value_pairs < 0.05)
+signif.permanova <- signif.permanova[order(signif.permanova$Obj.Phyloseq),]
+signif.permanova
+
+
+metadata <- sample_data(data) 
+anosim_result <- anosim(bc_dist, metadata$Specie)
+print(anosim_result)
+```
+
 
 ## Relative abundance
 
