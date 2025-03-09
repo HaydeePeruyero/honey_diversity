@@ -723,7 +723,18 @@ anosim_result <- anosim(bc_dist, metadata$Specie)
 print(anosim_result)
 ```
 
+```{r}
+set.seed(1234)
+bray_dist <- distance(data, method = "bray")
+metadata <- sample_data(data)
 
+metadata <- as.data.frame(metadata)
+
+adonis2(bray_dist ~ metadata$Specie)
+
+adonis2(bray_dist ~ metadata$Locality, permutations = 1000)
+
+```
 ## Relative abundance
 
 The relative abundance of taxa in metagenomic samples provides insights into the proportional representation of microbial groups within a given community. Relative abundance is calculated as the proportion of a specific taxon's abundance to the total abundance across all taxa in a sample. This metric is commonly expressed as a percentage or fraction.

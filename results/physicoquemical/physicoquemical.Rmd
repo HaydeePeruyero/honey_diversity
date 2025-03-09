@@ -157,7 +157,8 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/boxp
 ```
 
 
-```{r}
+```{r, eval=FALSE}
+#NO
 ggplot(df_long, aes(x = Parameter, y = Value, fill = Specie)) +
   geom_boxplot(width = 0.2) +  # Hace los boxplots más delgados
   geom_jitter(color="black", size=1, alpha=0.9, width = 0.15) +  # Agrega dispersión

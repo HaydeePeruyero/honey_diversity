@@ -1076,7 +1076,7 @@ Si se quiere analizar con respecto a otra variable que no sea *Especie*, entonce
 
 ```{r}
 estadisticos <- base2 %>%
-  group_by(Specie) %>%
+  group_by(base2$Specie) %>%
   summarise(
     promedio_moisture = mean(Moisture, na.rm = TRUE),
     sd_moisture = sd(Moisture, na.rm=TRUE),
