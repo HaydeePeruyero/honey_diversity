@@ -1244,14 +1244,20 @@ relative_plot_phylum
 
 ```{r, echo=FALSE}
 #los dos primeros son del mismo y los otros igual son del mismo pero del mucoromycota no parece que hay o es mínimo
-data <- subset_taxa(all_data, Kingdom == "Eukaryota" & Genus != "Homo" )
-data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia"))
+#data <- subset_taxa(all_data, Kingdom == "Eukaryota" & Genus != "Homo" )
+#data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", 
+#                                       "Mucoromycota",  "Microsporidia"))
 #sample_sums(data)
 #summary(data@otu_table@.Data)
+
+
+phylum_interes <- c("Ascomycota", "Basidiomycota", "Microsporidia", "Mucoromycota")
+ps_fungi <- subset_taxa(all_data, Phylum %in% phylum_interes)
+
 ```
 
 ```{r}
-rel_phylum_global <- tax_glom(data2, taxrank = 'Phylum')
+rel_phylum_global <- tax_glom(ps_fungi, taxrank = 'Phylum')
 rel_phylum_global <- transform_sample_counts(rel_phylum_global, function(x) x*100 / sum(x) )
 rel_phyl_global_df<-psmelt(rel_phylum_global) # convert to data frame
 #str(rel_phyl_global_df)
@@ -1263,9 +1269,11 @@ rel_phyl_global_df$Phylum <- as.factor(rel_phyl_global_df$Phylum)
 ```{r, echo=FALSE}
 # Define your custom color palette
 phylum_colors_rel <- c(
-  "Ascomycota" = "#1f78b4",  
-  "Basidiomycota" = "#287E36" 
-  #"Microsporidia" = "#a1d99b"
+  "Ascomycota" = "#2C85B2",  
+  "Basidiomycota" = "#85B22C", 
+  "Microsporidia" = "#B26F2C",
+  "Mucoromycota" = "#6551CC"
+  
 )
 
 relative_plot_phylum <- ggplot(data=rel_phyl_global_df, aes(x=Sample, y=Abundance, fill=Phylum))+ 
@@ -1288,7 +1296,7 @@ relative_plot_phylum
 ```
 
 ```{r, eval=FALSE, include=FALSE}
-ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota.svg", plot = relative_plot_phylum, width = 7, height = 5, dpi = 300)
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota2.svg", plot = relative_plot_phylum, width = 7, height = 5, dpi = 300)
 #ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/relative_abundance_phylum_eukaryota.png", plot = relative_plot_phylum, width = 6, height = 5, dpi = 300)
 ```
 
@@ -1297,13 +1305,12 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/rela
 
 ```{r, include=FALSE}
 #Subset
-rel_Genus_global <- tax_glom(data2, taxrank = 'Genus')
+rel_Genus_global <- tax_glom(ps_fungi, taxrank = 'Genus')
 rel_Genus_global <- transform_sample_counts(rel_Genus_global, function(x) x*100 / sum(x) )
 rel_Genus_global_df<-psmelt(rel_Genus_global) # convert to data frame
 #str(rel_Genus_global_df)
 rel_Genus_global_df$Genus[rel_Genus_global_df$Abundance < 5] <- "Genus < 5% abund"
 rel_Genus_global_df$Genus <- as.factor(rel_Genus_global_df$Genus)
-
 ```
 
 ```{r, echo=FALSE}
@@ -1333,10 +1340,19 @@ levels(rel_Genus_global_df$Genus)
 ```
 
 ```{r}
-niveles <- c("Candida", "Eremothecium", "Kluyveromyces", "Saccharomyces", "Sugiyamaella", "Zygotorulaspora",  
-             "Aspergillus", "Fusarium", "Pochonia", "Purpureocillium", "Pyrenophora", "Pyricularia", "Thermothielavioides", "Trichoderma", "Zymoseptoria",
-             "Cutaneotrichosporon", "Cryptococcus", "Kwoniella", "Marasmius", 
-             "Genus < 5% abund")
+# niveles <- c("Candida", "Eremothecium", "Kluyveromyces", "Saccharomyces", "Sugiyamaella", "Zygotorulaspora",  
+#              "Aspergillus", "Fusarium", "Pochonia", "Purpureocillium", "Pyrenophora", "Pyricularia", "Thermothielavioides", "Trichoderma", "Zymoseptoria",
+#              "Cutaneotrichosporon", "Cryptococcus", "Kwoniella", "Marasmius", 
+#              "Genus < 5% abund")
+
+niveles <- c("Alternaria", "Aspergillus", "Colletotrichum", "Fusarium",
+  "Henningerozyma", "Nakaseomyces", "Naumovozyma", "Neurospora", 
+  "Pyricularia", "Saccharomyces", "Saccharomycodes",
+  "Zygosaccharomyces", "Zygotorulaspora", #ascomycota
+  "Kwoniella", "Puccinia", # basidiomycota
+  "Vairimorpha",# microsporidia
+  "Rhizophagus", #mucoromycota
+  "Genus < 5% abund")  
 
 rel_Genus_global_df$Genus <- factor(rel_Genus_global_df$Genus, levels = niveles)
 
@@ -1346,13 +1362,21 @@ levels(rel_Genus_global_df$Genus)
 
 ```{r, echo=FALSE}
 
-blues_pubu <- c('#E5FFFF',"#66F0FF", "#B2F2FF","#80D4FF" ,"#3388FF", "#0040FF",
-  "#D4E7F3", "#0097BB", "#96B7E2", "#649CD4","#3261A4", "#3581C1",
+# blues_pubu <- c('#E5FFFF',"#66F0FF", "#B2F2FF","#80D4FF" ,"#3388FF", "#0040FF",
+#   "#D4E7F3", "#0097BB", "#96B7E2", "#649CD4","#3261A4", "#3581C1",
+#                 "#135FA5", "#083E81", "#273871")
+# 
+# greens_selected <- c("#BAE0B1", "#6EB769", "#287E36", "#005A32")
+
+blues_pubu <- c("#66F0FF", "#B2F2FF","#80D4FF" ,"#3388FF", "#0040FF",
+  "#D4E7F3", "#0097BB", "#96B7E2", "#649CD4","#3261A4",
                 "#135FA5", "#083E81", "#273871")
 
-greens_selected <- c("#BAE0B1", "#6EB769", "#287E36", "#005A32")
+greens_selected <- c("#6EB769", "#005A32")
 
-colores <- c(blues_pubu, greens_selected, "#778899")
+
+
+colores <- c(blues_pubu, greens_selected, "#B26F2C", "#6551CC", "#778899")
 
 relative_plot_g <- ggplot(data=rel_Genus_global_df, aes(x=Sample, y=Abundance, fill=Genus))+ 
   geom_bar(aes(), stat="identity", position="stack")+
@@ -1379,10 +1403,10 @@ ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/rela
 ```
 
 ```{r}
-data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")) 
-rel_Genus_global <- tax_glom(data2, taxrank = 'Genus')
-rel_Genus_global_df<-psmelt(rel_Genus_global)
-unique(rel_Gen)
+#data2 <- subset_taxa(data, Phylum == c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")) 
+#rel_Genus_global <- tax_glom(data2, taxrank = 'Genus')
+#rel_Genus_global_df<-psmelt(rel_Genus_global)
+#unique(rel_Gen)
 
 ```
 
@@ -1393,19 +1417,19 @@ unique(rel_Gen)
 #hongos <- c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia")
 #otros <- 
   
-data <- subset_taxa(all_data, Kingdom == "Eukaryota")
-eukaryas <- as.data.frame(tax_table(data))
+##data <- subset_taxa(all_data, Kingdom == "Eukaryota")
+#eukaryas <- as.data.frame(tax_table(data))
 
 # Definir los grupos de Phylum
-phylum_grupos <- eukaryas %>%
-  mutate(Phylum_Categoria = case_when(
-    Phylum == "Chordata" ~ "Chordata",
-    Phylum %in% c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia") ~ "Fungi",
-    TRUE ~ "Others"
-  ))
+##phylum_grupos <- eukaryas %>%
+#  mutate(Phylum_Categoria = case_when(
+##    Phylum == "Chordata" ~ "Chordata",
+#    Phylum %in% c("Ascomycota", "Basidiomycota", "Mucoromycota",  "Microsporidia") ~ "Fungi",
+#    TRUE ~ "Others"
+#  ))
 
 # Verificar la distribución
-table(phylum_grupos$Phylum_Categoria)
+#table(phylum_grupos$Phylum_Categoria)
 ```
 
 ```{r}
@@ -1603,4 +1627,53 @@ genero_reads_specie <- sum(otu_table(subset_genero_specie))
 # Calcular el porcentaje
 porcentaje_genero <- (genero_reads_specie / total_reads_specie) * 100
 porcentaje_genero
+```
+
+
+
+```{r}
+# Filtrar por un género específico
+# 83.46346, 6.213708,  0.9273718, 9.395462 <- M. beecheii
+# 67.41974,13.43503,2.963387,16.18184
+phylum_interes <- c("Ascomycota", "Basidiomycota", "Microsporidia", "Mucoromycota")
+ps_fungi <- subset_taxa(all_data, Phylum %in% phylum_interes)
+
+genero_of_interest <- "Ascomycota"
+#subset_genero <- subset_taxa(all_data, Phylum == phylums_int)
+
+# Filtrar por el metadato `specie`
+specie_of_interest <- "Scaptotrigona mexicana"
+subset_specie <- subset_samples(ps_fungi, Specie == specie_of_interest)
+
+# Calcular el total de reads para esa especie
+total_reads_specie <- sum(otu_table(subset_specie))
+
+# Calcular el total de reads del género específico dentro de esa especie
+subset_genero_specie <- subset_taxa(subset_specie, Phylum == genero_of_interest)
+genero_reads_specie <- sum(otu_table(subset_genero_specie))
+
+# Calcular el porcentaje
+porcentaje_genero <- (genero_reads_specie / total_reads_specie) * 100
+porcentaje_genero
+```
+
+
+```{r}
+
+# Sumar las abundancias por phylum dentro de cada especie
+otu_tab <- as.data.frame(otu_table(ps_fungi))  # Extraer la tabla OTU
+tax_tab <- as.data.frame(tax_table(ps_fungi))  # Extraer la tabla taxonómica
+
+# Agregar la información del phylum a la tabla OTU
+otu_tab$Phylum <- tax_tab$Phylum
+
+# Sumar por phylum dentro de cada especie
+otu_sum <- aggregate(. ~ Phylum, data = otu_tab, sum)
+
+# Calcular el porcentaje relativo dentro de los Fungi
+otu_sum[-1] <- sweep(otu_sum[-1], 2, colSums(otu_sum[-1]), "/") * 100
+
+# Mostrar resultados
+print(otu_sum)
+
 ```
