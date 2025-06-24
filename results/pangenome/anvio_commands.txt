@@ -1,0 +1,61 @@
+Pangenoma ANVIO
+
+0. Renombrar archivos a que no tengan puntos sus nombre ni que comiencen con número, la configuración del nombre fue Genero_Specie_Sepa.gbk
+
+1. Crear carpeta 
+mkdir genome-db
+
+2. Correr fuera de carpeta:
+
+ls /data2/MIEL/results/data_pangenoma/*.gbk | cut -d'/' -f6 | cut -d'.' -f1 | while read line; do anvi-script-process-genbank -i GENBANK --input-genbank /data2/MIEL/results/data_pangenoma/$line.gbk -O genome-db/$line; done
+
+(en dos jinshanensis brasiliensis y aerogenes marco un warning)
+
+3. 
+cd genome-db
+ls *.fa | while read line; do anvi-script-reformat-fasta --seq-type NT $line -o $line\.fasta; done
+
+4. 
+
+ls *fasta | while read line; do anvi-gen-contigs-database -T 6 -f $line -o $line-contigs.db; done
+
+
+5. 
+
+rename s'/.fa.fasta-contigs.db/.db/' *db
+
+6. 
+
+ls *-contigs.db | cut -d'-' -f1 | while read line; do echo $line$'\t'$line-contigs.db >> external-genomes.txt; done
+
+
+7.
+nano external-genomes.txt
+** add a header
+name contigs_db_path
+
+
+8. 
+
+ls *contigs.db | while read line; do anvi-run-hmms -c $line; done
+
+9. 
+
+anvi-gen-genomes-storage -e external-genomes.txt -o HONEY_GENOMES.db
+
+
+10. 
+
+anvi-pan-genome -g HONEY_GENOMES.db --project-name "PANGENOME-HONEY" --output-dir HONEY --num-threads 10 --minbit 0.5 --mcl-inflation 10 --use-ncbi-blast
+
+
+11.
+
+anvi-compute-genome-similarity --external-genomes external-genomes.txt \
+                               --program pyANI \
+                               --output-dir ANI \
+                               --num-threads 6 \
+                               --pan-db HONEY/PANGENOME-HONEY-PAN.db
+
+
+anvi-compute-genome-similarity --external-genomes external-genomes.txt --program pyANI --output-dir ANI --num-threads 6 --pan-db HONEY/PANGENOME-HONEY-PAN.db
