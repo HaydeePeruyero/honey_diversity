@@ -1,8 +1,9 @@
-# Microbial diversity and characterization of honey from two native stingless bees (Melipona Beecheii and Scaptotrigona mexicana) located in Mexico
+# Uncharacterized *Acetilactobacillus*-like genera represent the most abundant microorganisms in honeys produced by native stingless bee
 
 
 
 ---
 Authors:
-- Haydeé Peruyero
+- Haydeé Contreras Peruyero
+- Aurora Xolalpa Aroche
 - Nelly Sélem Mojica
