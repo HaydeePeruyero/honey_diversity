@@ -1,0 +1,499 @@
+---
+title: "16S"
+author: "Haydeé"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(ggplot2)
+```
+
+
+```{r}
+resumen_mapeo <- read_csv("D:/Users/hayde/Documents/R_sites/honey_diversity/data/resumen_mapeo.csv")
+```
+
+```{r}
+filtro <- resumen_mapeo %>%
+  filter(porcentaje_mapeo>0)
+filtro$archivo <- sub("\\.bam$", "", filtro$archivo)
+```
+
+
+```{r}
+p <- ggplot(filtro, aes(x = reorder(archivo, porcentaje_mapeo), y = porcentaje_mapeo)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(
+    x = "Samples_vs_Genomes",
+    y = "Mapping percentage (%)",
+    title = "Mapping percentage per sample vs Genomes"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    plot.margin = margin(20, 20, 20, 20)
+  ) +
+  scale_y_continuous(limits = c(0, 100), expand = expansion(mult = c(0, 0.05)))
+
+ggsave("D:/Users/hayde/Documents/R_sites/honey_diversity/figures/porcentaje_mapeo_grande.svg", plot = p, width = 14, height = 16, dpi = 300)
+
+```
+
+
+```{r}
+
+
+filtro_separado <- resumen_mapeo %>%
+  separate(archivo, into = c("Sample", "Genome"), sep = "_vs_")
+
+filtro_separado <- filtro_separado %>%
+  mutate(Sample = case_when(
+    Sample == "16_S138" ~ "16.S_Melli",
+    Sample == "12_S134" ~ "12.S_Melli",
+    Sample == "15_S137" ~ "15.S_Melli",
+    Sample == "10_S132" ~ "10.S_Melli",
+    Sample == "4_S127" ~ "4.S_Scapto",
+    Sample == "14_S136" ~ "14.S_Scapto",
+    TRUE ~ Sample  # mantener el valor original si no coincide
+  ))
+
+filtro_separado$Genome <- sub("\\.bam$", "", filtro_separado$Genome)
+```
+
+```{r}
+orden_genomas <- c(
+  "Scapto_23_001",
+  "Scapto_89_001",
+  "Scapto_92_002",
+  "Melli_42_004",
+  "Scapto_89_002",
+  "Scapto_90_012",
+  "Scapto_51_004",
+  "Scapto_92_009",
+  "A_jinshanensis_strainHSLZ75",
+  "A_jinshanensis_subsaerogenes",
+  "A_jinshanensis_brasiliensis",
+  "Melli_45_020",
+  "Melli_47_001",
+  "Melli_41_001",
+  "Melli_22_029",
+  "L_Lactobacillus_spSy1",
+  "Melli_40_029",
+  "Melli_45_016",
+  "Melli_46_022",
+  "A_micheneri_strainHlig3",
+  "A_micheneri_strainNBRC113063",
+  "A_timberlakei_strainHV12",
+  "A_quenuiae_strainHV6",
+  "A_apinorum_strainFhon13",
+  "A_kunkeei_DSM12361",
+  "A_ozensis_DSM23829",
+  "F_lindneri_strainDSM20690",
+  "F_sanfranciscensis_DSM20451",
+  "F_florum_DSM22689",
+  "F_fructivorans_strainDSM20203",
+  "L_senioris_DSM24302"
+)
+
+
+filtro_separado$Genome <- factor(filtro_separado$Genome, levels = orden_genomas)
+```
+
+```{r}
+nombres_codificados_inverso <- c(
+  "Scapto_23_001",
+  "Scapto_89_001",
+  "Scapto_92_002",
+  "Melli_42_004",
+  "Scapto_89_002",
+  "Scapto_90_012",
+  "Scapto_51_004",
+  "Scapto_92_009",
+  "A_jinshanensis_strainHSLZ75",
+  "A_jinshanensis_subsaerogenes",
+  "A_jinshanensis_brasiliensis",
+  "Melli_45_020",
+  "Melli_47_001",
+  "Melli_41_001",
+  "Melli_22_029",
+  "L_Lactobacillus_spSy1",
+  "Melli_40_029",
+  "Melli_45_016",
+  "Melli_46_022",
+  "A_micheneri_strainHlig3",
+  "A_micheneri_strainNBRC113063",
+  "A_timberlakei_strainHV12",
+  "A_quenuiae_strainHV6",
+  "A_apinorum_strainFhon13",
+  "A_kunkeei_DSM12361",
+  "A_ozensis_DSM23829",
+  "F_lindneri_strainDSM20690",
+  "F_sanfranciscensis_DSM20451",
+  "F_florum_DSM22689",
+  "F_fructivorans_strainDSM20203",
+  "L_senioris_DSM24302"
+)
+
+nombres_legibles_inverso <- c(
+  "23_Scapto.001",
+  "89_Scapto.001",
+  "92_Scapto.002",
+  "42_Melli.004",
+  "89_Scapto.002",
+  "90_Scapto.012",
+  "51_Scapto.004",
+  "92_Scapto.009",
+  "A. jinshanensis strain HSLZ-75",
+  "A. jinshanensis subsp. aerogenes",
+  "A. jinshanensis brasiliensis",
+  "45_Melli.020",
+  "47_Melli.001",
+  "41_Melli.001",
+  "22_Melli.029",
+  "Lactobacillus sp. Sy-1",
+  "40_Melli.029",
+  "45_Melli.016",
+  "46_Melli.022",
+  "A. micheneri strain Hlig3",
+  "A. micheneri strain NBRC-113063",
+  "A. timberlakei strain HV-12",
+  "A. quenuiae strain HV-6",
+  "A. apinorum strain Fhon13",
+  "A. kunkeei DSM-12361",
+  "A. ozensis DSM-23829",
+  "F. lindneri strain DSM-20690",
+  "F. sanfranciscensis DSM-20451",
+  "F. florum DSM-22689",
+  "F. fructivorans strain DSM-20203",
+  "L. senioris DSM-24302"
+)
+
+
+nombres_reemplazo <- setNames(nombres_legibles_inverso, nombres_codificados_inverso)
+
+# Reemplazo de valores
+filtro_separado$Genome <- nombres_reemplazo[filtro_separado$Genome]
+
+# Convertir en factor con el orden correcto (ya legible)
+filtro_separado$Genome <- factor(filtro_separado$Genome, levels = nombres_legibles_inverso)
+
+
+```
+
+
+```{r}
+p <- ggplot(filtro_separado, aes(x = Sample, y = Genome, fill = porcentaje_mapeo)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(name = "Mapping percentage (%)",
+                       guide = guide_colorbar(
+      barwidth = 1.5,    # ancho de la barra
+      barheight = 20,    # alto de la barra
+      ticks.colour = "black",
+      ticks.linewidth = 1)) +
+  labs(x = "Sample", y = "Genome", fill = "% mapeo") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme( legend.text = element_text(size = 16, face = "italic"), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16) )
+         
+p
+ggsave("D:/Users/hayde/Documents/R_sites/honey_diversity/figures/heatmap_mapeos.svg", plot = p, width = 10, height = 9, dpi = 300)
+
+```
+
+
+
+
+# Explore blast hits
+
+
+```{r}
+otu_taxa_hits <- read.csv("D:/Users/hayde/Documents/R_sites/honey_diversity/data/otu_taxa_hits_16s.csv", stringsAsFactors = FALSE)
+
+colnames(otu_taxa_hits)[3:8] <- c("10.S_Melli", "12.S_Melli", "14.S_Scapto", 
+                                  "15.S_Melli", "16.S_Melli", "4.S_Scapto")
+
+
+otu_taxa_hits$genome <- sub("\\|.*", "", otu_taxa_hits$sseqid)
+otu_taxa_hits <- otu_taxa_hits %>%
+  mutate(genome = case_when(
+    pident < 95 ~ "other, less than 95%",
+    TRUE ~ genome  # si no, conserva el valor original
+  ))
+```
+
+```{r}
+# Asegúrate de que los nombres de columnas sean strings
+#colnames(otu_taxa_hits) <- as.character(colnames(otu_taxa_hits))
+
+#Select columns
+sample_cols <- colnames(otu_taxa_hits)[3:8]
+
+#Convertir a relativas por muestra (por columna)
+otu_taxa_hits_rel <- otu_taxa_hits %>%
+  mutate(across(all_of(sample_cols), ~ .x / sum(.x, na.rm = TRUE)))
+
+# Pivotear a formato largo
+otu_long <- otu_taxa_hits_rel %>%
+  pivot_longer(
+    cols = all_of(sample_cols),
+    names_to = "Sample",
+    values_to = "Abundance"
+  )
+```
+
+
+```{r}
+best_hits_plot <- ggplot(otu_long, aes(x = Sample, y = Abundance, fill = genome)) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(name = "Genome",values = c("Melli_45_016-contigs" = "#4F81BD", "other, less than 95%" = "gray"), labels = c("Melli_45_016-contigs" = "45_Melli.016", "other, less than 95%" = "Other, less than 95%"))+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  ylab("Relative Abundance") +
+  xlab("Sample") +
+  ggtitle("Genome Best Hits per Sample")+
+  theme( legend.text = element_text(size = 16, face = "italic"), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 16, angle = 90),
+         axis.text.y = element_text(size = 16), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16),
+         legend.position = "bottom")
+
+best_hits_plot
+```
+
+```{r, eval=FALSE, include=FALSE}
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/best_hit_per_sample.svg", plot = best_hits_plot, width = 7, height = 6, dpi = 300)
+```
+
+
+### heatmap
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(ggnewscale)
+
+# Pivotear
+sample_cols <- c("10.S_Melli", "12.S_Melli", "14.S_Scapto", 
+                 "15.S_Melli", "16.S_Melli", "4.S_Scapto")
+
+df_long <- otu_taxa_hits %>%
+  pivot_longer(cols = all_of(sample_cols), names_to = "Sample", values_to = "Count")
+
+# Separar por grupo
+df_melli <- df_long %>% filter(genome == "Melli_45_016-contigs")
+df_other <- df_long %>% filter(genome == "other, less than 95%")
+
+# Plot
+heatmap_plot <- ggplot() +
+  geom_tile(data = df_melli, aes(x = Sample, y = ID, fill = Count), color = "white") +
+  scale_fill_gradient(low = "#deebf7", high = "#3182bd", name = "45_Melli.016/41_Melli.001") +
+  #geom_text(data = df_melli, aes(x = Sample, y = ID, label = Count), size = 3) +
+
+  ggnewscale::new_scale_fill() +
+
+  geom_tile(data = df_other, aes(x = Sample, y = ID, fill = Count), color = "white") +
+  scale_fill_gradient(low = "#f0f0f0", high = "#636363", name = "Other, less than 95%") +
+  #geom_text(data = df_other, aes(x = Sample, y = ID, label = Count), size = 3) +
+
+  theme_minimal() +
+  labs(x = "Sample", y = "ID") +
+    theme( legend.text = element_text(size = 14, face = "italic"), 
+         legend.key.size = unit(0.4, 'cm'), 
+         axis.title = element_text(size = 16), 
+         axis.text.x = element_text(size = 12, angle = 90),
+         axis.text.y = element_text(size = 10), 
+         plot.title = element_text(size = 20), 
+         axis.title.x = element_text(size = 16, face = "bold"),
+         axis.title.y = element_text(size = 16, face = "bold"), 
+         legend.title = element_text(size = 16))
+heatmap_plot
+```
+```{r}
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/heatmap_counts.svg", plot = heatmap_plot, width = 8, height = 10, dpi = 300)
+```
+
+
+```{r}
+# Pivotear
+sample_cols <- c("10.S_Melli", "12.S_Melli", "14.S_Scapto", 
+                 "15.S_Melli", "16.S_Melli", "4.S_Scapto")
+
+df_long <- otu_taxa_hits %>%
+  pivot_longer(cols = all_of(sample_cols), names_to = "Sample", values_to = "Count")
+
+# Separar por grupo y filtrar los ID que solo aparecen en cada uno
+df_melli <- df_long %>% 
+  filter(genome == "Melli_45_016-contigs")
+
+df_other <- df_long %>% 
+  filter(genome == "other, less than 95%")
+
+# Agregar columna para paneles
+df_melli$Grupo <- "45_Melli.016 / 41_Melli.001"
+df_other$Grupo <- "Other, less than 95%"
+
+```
+
+```{r}
+library(ggplot2)
+library(ggnewscale)
+
+plot_heat<- ggplot() +
+  geom_tile(data = df_melli, aes(x = Sample, y = ID, fill = Count), color = "white") +
+  scale_fill_gradient(
+    low = "#deebf7", high = "#3182bd",
+    name = "45_Melli.016 / 41_Melli.001"
+  ) +
+
+  ggnewscale::new_scale_fill() +
+
+  geom_tile(data = df_other, aes(x = Sample, y = ID, fill = Count), color = "white") +
+  scale_fill_gradient(
+    low = "#f0f0f0", high = "#636363",
+    name = "Other, less than 95%"
+  ) +
+
+  facet_wrap(~ Grupo, nrow = 1, scales = "free_y") +
+  theme_minimal() +
+  labs(x = "Sample", y = "ID") +
+  theme(
+    legend.text = element_text(size = 14, face = "italic"), 
+    legend.key.size = unit(0.4, 'cm'), 
+    axis.title = element_text(size = 16), 
+    axis.text.x = element_text(size = 12, angle = 90),
+    axis.text.y = element_text(size = 10), 
+    plot.title = element_text(size = 20), 
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"), 
+    legend.title = element_text(size = 16),
+    strip.text = element_text(size = 12, face = "bold") 
+  )
+plot_heat
+```
+```{r}
+ggsave(filename = "D:/Users/hayde/Documents/R_sites/honey_diversity/figures/heatmap_counts_separados.svg", plot = plot_heat, width = 10, height = 8, dpi = 300)
+```
+
+
+
+## Blast
+
+```{r}
+#######After blast 
+blast <- read.table("D:/Users/hayde/Documents/R_sites/honey_diversity/data/blast_results.tsv", header = FALSE, sep = "\t")
+
+blast <- as.data.frame(blast)
+
+colnames(blast) <- c(
+  "qseqid", "sseqid", "pident", "length", "mismatch", "gapopen",
+  "qstart", "qend", "sstart", "send", "evalue", "bitscore"
+)
+
+
+# Asegurar tipos
+blast$evalue <- as.numeric(blast$evalue)
+blast$bitscore <- as.numeric(blast$bitscore)
+```
+
+
+```{r}
+#### for each qseqid, diference:
+blast_subset <- blast %>%
+  filter(sseqid %in% c("Melli_45_016-contigs|k141_1186275",
+                       "Melli_41_001-contigs|k141_1172984"))
+
+blast_best <- blast_subset %>%
+  group_by(qseqid, sseqid) %>%
+  slice_max(pident, n = 1) %>%
+  ungroup()
+
+blast_wide <- blast_best %>%
+  select(qseqid, sseqid, pident) %>%
+  pivot_wider(names_from = sseqid, values_from = pident)
+
+blast_wide_filtered <- blast_wide %>%
+  filter(
+    `Melli_45_016-contigs|k141_1186275` > 95,
+    `Melli_41_001-contigs|k141_1172984` > 95
+  )
+
+
+blast_wide_filtered <- blast_wide_filtered %>%
+  mutate(pident_diff = `Melli_45_016-contigs|k141_1186275` - `Melli_41_001-contigs|k141_1172984`)
+
+####### mismatches
+blast_subset <- blast %>%
+  filter(sseqid %in% c("Melli_45_016-contigs|k141_1186275",
+                       "Melli_41_001-contigs|k141_1172984"))
+
+blast_best <- blast_subset %>%
+  group_by(qseqid, sseqid) %>%
+  slice_max(mismatch, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+blast_wide <- blast_best %>%
+  select(qseqid, sseqid, mismatch) %>%
+  pivot_wider(names_from = sseqid, values_from = mismatch)
+
+blast_wide_filtered <- blast_wide %>%
+  filter(
+    `Melli_45_016-contigs|k141_1186275` < 6,
+    `Melli_41_001-contigs|k141_1172984` < 6
+  )
+
+
+blast_wide_filtered <- blast_wide_filtered %>%
+  mutate(mismatch_diff = `Melli_45_016-contigs|k141_1186275` - `Melli_41_001-contigs|k141_1172984`)
+
+blast_wide_filtered
+###########
+target_genomes <- c("Melli_45_016-contigs|k141_1186275", 
+                    "Melli_41_001-contigs|k141_1172984")
+
+blast_filtered <- blast %>%
+  filter(sseqid %in% target_genomes, pident > 95)
+
+summary_stats <- blast_filtered %>%
+  group_by(sseqid) %>%
+  summarise(
+    mean_pident = mean(pident, na.rm = TRUE),
+    sd_pident = sd(pident, na.rm = TRUE),
+    
+    mean_mismatch = mean(mismatch, na.rm = TRUE),
+    sd_mismatch = sd(mismatch, na.rm = TRUE),
+    
+    mean_length = mean(length, na.rm = TRUE),
+    sd_length = sd(length, na.rm = TRUE),
+    
+    total_hits = n()
+  )
+print(summary_stats)
+
+```
