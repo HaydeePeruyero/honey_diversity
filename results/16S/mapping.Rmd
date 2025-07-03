@@ -75,45 +75,6 @@ filtro_separado$Genome <- sub("\\.bam$", "", filtro_separado$Genome)
 ```
 
 ```{r}
-orden_genomas <- c(
-  "Scapto_23_001",
-  "Scapto_89_001",
-  "Scapto_92_002",
-  "Melli_42_004",
-  "Scapto_89_002",
-  "Scapto_90_012",
-  "Scapto_51_004",
-  "Scapto_92_009",
-  "A_jinshanensis_strainHSLZ75",
-  "A_jinshanensis_subsaerogenes",
-  "A_jinshanensis_brasiliensis",
-  "Melli_45_020",
-  "Melli_47_001",
-  "Melli_41_001",
-  "Melli_22_029",
-  "L_Lactobacillus_spSy1",
-  "Melli_40_029",
-  "Melli_45_016",
-  "Melli_46_022",
-  "A_micheneri_strainHlig3",
-  "A_micheneri_strainNBRC113063",
-  "A_timberlakei_strainHV12",
-  "A_quenuiae_strainHV6",
-  "A_apinorum_strainFhon13",
-  "A_kunkeei_DSM12361",
-  "A_ozensis_DSM23829",
-  "F_lindneri_strainDSM20690",
-  "F_sanfranciscensis_DSM20451",
-  "F_florum_DSM22689",
-  "F_fructivorans_strainDSM20203",
-  "L_senioris_DSM24302"
-)
-
-
-filtro_separado$Genome <- factor(filtro_separado$Genome, levels = orden_genomas)
-```
-
-```{r}
 nombres_codificados_inverso <- c(
   "Scapto_23_001",
   "Scapto_89_001",
